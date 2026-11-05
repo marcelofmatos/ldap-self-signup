@@ -9,6 +9,7 @@ CONFIRMAR_EMAIL = "confirmar_email"
 DEFINIR_SENHA = "definir_senha"
 CONFIRMAR_DADOS = "confirmar_dados"
 CONVITE = "convite"
+DEFINIR_EMAIL = "definir_email"
 
 
 def hash_token(token: str) -> str:
@@ -17,7 +18,7 @@ def hash_token(token: str) -> str:
 
 def emitir(banco, finalidade: str, alvo: str, ttl_horas: int, agora: datetime, *,
            invalidar_anteriores: bool = True) -> str:
-    if invalidar_anteriores and finalidade in (DEFINIR_SENHA, CONVITE, CONFIRMAR_EMAIL, CONFIRMAR_DADOS):
+    if invalidar_anteriores and finalidade in (DEFINIR_SENHA, CONVITE, CONFIRMAR_EMAIL, CONFIRMAR_DADOS, DEFINIR_EMAIL):
         banco.invalidar_tokens(finalidade, alvo, agora)
     token = secrets.token_urlsafe(32)
     banco.inserir_token(hash_token(token), finalidade, alvo, iso(agora + timedelta(hours=ttl_horas)))

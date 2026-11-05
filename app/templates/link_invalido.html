@@ -1,5 +1,5 @@
 {% extends "base.html" %}
 {% block conteudo %}
 <h1>Link inválido ou expirado</h1>
-<p>Este link não é mais válido. Peça um novo link ao administrador.</p>
+<p>{{ motivo or "Este link não é mais válido. Peça um novo link ao administrador." }}</p>
 {% endblock %}

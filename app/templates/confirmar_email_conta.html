@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block conteudo %}
+<h1>Confirmar e-mail</h1>
+<p>Confirme o e-mail <strong>{{ email }}</strong> para a conta <strong>{{ uid }}</strong>.</p>
+<form method="post">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <button type="submit">Confirmar e-mail</button>
+</form>
+{% endblock %}

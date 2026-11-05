@@ -206,3 +206,17 @@ def test_contas_por_email(ldap):
         assert [(c["uid"], c["cn"]) for c in achadas] == [("antigo", "Antigo Usuario")]
     assert d.contas_por_email("ninguem@teste.local") == []
     assert d.contas_por_email("*") == []
+
+
+def test_definir_email_troca_so_o_mail(ldap):
+    d = Diretorio(ldap.cfg)
+    antes = _entrada(ldap.con, "antigo")
+    d.definir_email("antigo", "novo@teste.local")
+    depois = _entrada(ldap.con, "antigo")
+    assert depois["mail"] == ["novo@teste.local"]
+    assert {k: v for k, v in depois.items() if k != "mail"} == {k: v for k, v in antes.items() if k != "mail"}
+
+
+def test_definir_email_conta_inexistente(ldap):
+    with pytest.raises(ErroDiretorio):
+        Diretorio(ldap.cfg).definir_email("naoexiste", "a@teste.local")

@@ -103,6 +103,8 @@ EMAILS_PADRAO = [
                         "links": {"Chat": "https://chat.x"}}, "Definir minha senha"),
     ("reset_senha", {"nome": "Maria", "uid": "mariasouza", "link": "https://x/d/t", "validade": 24},
      "Redefinir senha"),
+    ("confirmar_email_conta", {"nome": "Maria", "uid": "mariasouza", "link": "https://x/confirmar-email-conta/t",
+                               "validade": 24}, "Confirmar e-mail"),
     ("confirmar_dados", {"nome": "Maria", "uid": "mariasouza", "link": "https://x/confirmar-dados/t", "validade": 24},
      "Conferir meus dados"),
     ("dados_atualizados", {"nome": "Maria", "uid": "mariasouza", "link": "https://x/d/t", "validade": 24},

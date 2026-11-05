@@ -89,6 +89,12 @@ class FakeDiretorio:
             raise ErroDiretorio(f"conta {uid} não encontrada")
         self.contas[uid].update(cn=contas.derivar_nomes(nome)["cn"], cpf=cpf, mail=mail, telefone=telefone)
 
+    def definir_email(self, uid, email):
+        self._checar()
+        if uid not in self.contas:
+            raise ErroDiretorio(f"conta {uid} não encontrada")
+        self.contas[uid]["mail"] = email
+
     def criar_conta(self, *, uid, nome, cpf, mail, telefone, org, hoje=None):
         self._checar()
         if self.falhar_criacao:

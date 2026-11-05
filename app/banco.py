@@ -34,6 +34,9 @@ CREATE TABLE IF NOT EXISTS auditoria (
   id INTEGER PRIMARY KEY AUTOINCREMENT, quando TEXT NOT NULL, ator TEXT NOT NULL,
   acao TEXT NOT NULL, alvo TEXT, detalhe TEXT
 );
+CREATE TABLE IF NOT EXISTS email_pendente (
+  uid TEXT PRIMARY KEY, email TEXT NOT NULL, pedido_por TEXT NOT NULL, criado_em TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS lotes (
   id INTEGER PRIMARY KEY AUTOINCREMENT, criado_por TEXT NOT NULL, criado_em TEXT NOT NULL, linhas TEXT NOT NULL
 );
@@ -382,6 +385,21 @@ class Banco:
     def remover_lote(self, lid: int) -> bool:
         with self._con() as con:
             return con.execute("DELETE FROM lotes WHERE id=?", (lid,)).rowcount == 1
+
+    # --- e-mail pendente de confirmação (informado pelo admin) ---
+    def gravar_email_pendente(self, uid: str, email: str, pedido_por: str, agora: datetime) -> None:
+        with self._con() as con:
+            con.execute("INSERT OR REPLACE INTO email_pendente (uid, email, pedido_por, criado_em) VALUES (?,?,?,?)",
+                        (uid, email, pedido_por, iso(agora)))
+
+    def email_pendente(self, uid: str) -> dict | None:
+        with self._con() as con:
+            row = con.execute("SELECT * FROM email_pendente WHERE uid=?", (uid,)).fetchone()
+        return dict(row) if row else None
+
+    def remover_email_pendente(self, uid: str) -> None:
+        with self._con() as con:
+            con.execute("DELETE FROM email_pendente WHERE uid=?", (uid,))
 
     # --- auditoria ---
     def auditar(self, ator: str, acao: str, alvo: str, detalhe: str, agora: datetime) -> None:

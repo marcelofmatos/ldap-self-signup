@@ -216,7 +216,7 @@ O tema é por deploy, montado em `/template` (somente leitura). O que faltar usa
   paginas/*.html       # opcional: sobrescreve páginas Jinja2 padrão
   emails/*.md          # opcional: confirmar_email, nova_solicitacao, conta_aprovada,
                        #           reset_senha, solicitacao_rejeitada, convite, convite_email,
-                       #           confirmar_dados, dados_atualizados, alteracao_rejeitada
+                       #           confirmar_dados, dados_atualizados, alteracao_rejeitada, confirmar_email_conta
   emails/_layout.html  # opcional: layout HTML dos e-mails
 ```
 
@@ -278,6 +278,7 @@ itálico. Placeholders:
 | `convite` | `plataforma`, `nome`, `link`, `validade_dias`, `convidado_por` (uid do admin) |
 | `convite_email` | `plataforma`, `link`, `validade_dias`, `convidado_por` (uid do admin) |
 | `confirmar_dados` | `plataforma`, `nome`, `uid`, `link`, `validade` |
+| `confirmar_email_conta` | `plataforma`, `nome`, `uid`, `link`, `validade` |
 | `dados_atualizados` | `plataforma`, `nome`, `uid`, `link`, `validade` |
 | `alteracao_rejeitada` (ao e-mail atual do LDAP) | `plataforma`, `nome`, `motivo` |
 

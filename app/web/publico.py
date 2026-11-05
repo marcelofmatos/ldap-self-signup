@@ -162,6 +162,51 @@ def confirmar_email(token):
     return render_template("email_confirmado.html")
 
 
+def _email_da_conta_do_link(token: str) -> tuple[str, dict] | None:
+    """(uid, pendente) do link definir_email válido, se a conta ainda tem um e-mail pendente."""
+    s = svc()
+    uid = tokens.validar(s.banco, token, tokens.DEFINIR_EMAIL, s.agora())
+    pendente = s.banco.email_pendente(uid) if uid else None
+    return (uid, pendente) if pendente else None
+
+
+@bp.get("/confirmar-email-conta/<token>")
+def confirmar_email_conta_form(token):
+    achado = _email_da_conta_do_link(token)
+    if achado is None:
+        return render_template("link_invalido.html"), 410
+    uid, pendente = achado
+    return render_template("confirmar_email_conta.html", uid=uid, email=pendente["email"])
+
+
+@bp.post("/confirmar-email-conta/<token>")
+def confirmar_email_conta(token):
+    s = svc()
+    if not s.limite_token.permitir(ip_cliente()):
+        return render_template("limite.html"), 429
+    agora = s.agora()
+    achado = _email_da_conta_do_link(token)
+    if achado is None:
+        return render_template("link_invalido.html"), 410
+    uid, pendente = achado
+    email = pendente["email"]
+    try:
+        if s.diretorio.obter_conta(uid) is None:
+            return render_template("link_invalido.html"), 410
+        if any(c["uid"] != uid for c in s.diretorio.contas_por_email(email)):
+            return render_template("link_invalido.html", motivo="Este e-mail já é usado por outra conta."), 409
+        s.diretorio.definir_email(uid, email)
+    except ErroDiretorio as e:
+        log.error("falha ao definir e-mail de %s: %s", uid, e)
+        return render_template("erro_diretorio.html"), 503
+    if tokens.consumir(s.banco, token, tokens.DEFINIR_EMAIL, agora) is None:
+        return render_template("link_invalido.html"), 410
+    s.banco.remover_email_pendente(uid)
+    s.banco.auditar("publico", "email_definido", uid, email, agora)
+    nova = tokens.emitir(s.banco, tokens.DEFINIR_SENHA, uid, s.cfg.token_ttl_hours, agora)
+    return redirect(url_for("publico.definir_senha_form", token=nova))
+
+
 @bp.get("/definir-senha/<token>")
 def definir_senha_form(token):
     s = svc()

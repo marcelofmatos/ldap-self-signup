@@ -194,6 +194,17 @@ class Diretorio:
         except LDAPException as e:
             raise ErroDiretorio(str(e)) from e
 
+    def definir_email(self, uid: str, email: str) -> None:
+        """Troca só o `mail` da conta."""
+        try:
+            with self._con() as con:
+                achados = self._buscar(con, f"(uid={esc(uid)})", ["uid"])
+                if len(achados) != 1:
+                    raise ErroDiretorio(f"conta {uid} não encontrada")
+                con.modify(achados[0][0], {"mail": [(MODIFY_REPLACE, [email])]})
+        except LDAPException as e:
+            raise ErroDiretorio(str(e)) from e
+
     def criar_conta(self, *, uid: str, nome: str, cpf: str, mail: str, telefone: str, org: str,
                     hoje: date | None = None) -> int:
         """Cria a conta com senha aleatória descartada e a põe no grupo padrão. Retorna o uidNumber."""
