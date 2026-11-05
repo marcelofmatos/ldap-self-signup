@@ -114,3 +114,9 @@ def test_rotulos_no_historico(adm):
     _pedir(adm)
     html = adm.client.get("/admin/contas/ana").text
     assert "Pediu confirmação de e-mail" in html
+
+
+def test_ficha_ignora_pendente_com_link_expirado(adm):
+    _pedir(adm)
+    adm.relogio.avancar(hours=adm.cfg.token_ttl_hours + 1)
+    assert "Aguardando confirmação" not in adm.client.get("/admin/contas/ana").text

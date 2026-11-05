@@ -364,9 +364,12 @@ def _ficha(s, dados: dict, grupos: list, status: int = 200):
     uid = dados["uid"]
     solicitacoes = s.banco.solicitacoes_da_conta(uid)
     historico = s.banco.historico_da_conta(uid, [x["id"] for x in solicitacoes])
+    pendente = s.banco.email_pendente(uid)
+    if pendente and pendente["criado_em"] <= iso(s.agora() - timedelta(hours=s.cfg.token_ttl_hours)):
+        pendente = None  # o link já expirou
     return render_template("admin/conta.html", conta=dados, grupos=grupos, solicitacoes=solicitacoes,
                            historico=historico, acoes_erro=ACOES_ERRO, rotulos=STATUS,
-                           pendente=s.banco.email_pendente(uid)), status
+                           pendente=pendente), status
 
 
 @bp.get("/contas/<uid>")
