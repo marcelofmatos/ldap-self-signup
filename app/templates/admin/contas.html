@@ -60,7 +60,9 @@
     <td>{{ c.ou or '—' }}</td>
     {% if c.grupos %}<td class="grupos" title="{{ c.grupos|join(', ') }}"><span>{{ c.grupos[0] }}</span>{% if c.grupos|length > 1 %} <span class="mudo">+{{ c.grupos|length - 1 }}</span>{% endif %}</td>
     {%- else %}<td class="grupos">—</td>{% endif %}
-    <td class="acoes"><a class="icone botao-icone" href="{{ url_for('admin.conta', uid=c.uid) }}" title="Ver ficha da conta" aria-label="Ver ficha da conta">{{ icone_ver() }}</a><form method="post" action="{{ url_for('admin.confirmacao', uid=c.uid) }}">
+    <td class="acoes"><form method="get" action="{{ url_for('admin.conta', uid=c.uid) }}">
+      <button type="submit" class="icone" title="Ver ficha da conta" aria-label="Ver ficha da conta">{{ icone_ver() }}</button>
+    </form><form method="post" action="{{ url_for('admin.confirmacao', uid=c.uid) }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       {% set dica = 'Pedir confirmação dos dados' if c.mail else 'Sem e-mail: cadastre o e-mail antes' %}
       <button type="submit" {% if not c.mail %}disabled {% endif %}class="icone" title="{{ dica }}" aria-label="{{ dica }}">{{ icone_confirmar() }}</button>

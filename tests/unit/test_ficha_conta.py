@@ -87,7 +87,9 @@ def test_lista_tem_link_para_ficha(amb):
     _conta(amb)
     _login(amb)
     html = amb.client.get("/admin/contas").get_data(as_text=True)
-    assert 'href="/admin/contas/ana"' in html and 'title="Ver ficha da conta"' in html
+    # botão como as outras ações da linha (mesmo estilo em qualquer tema), num form GET para a ficha
+    assert '<form method="get" action="/admin/contas/ana">' in html
+    assert '<button type="submit" class="icone" title="Ver ficha da conta" aria-label="Ver ficha da conta">' in html
 
 
 def test_rotas_de_lote_nao_sao_capturadas_como_uid(amb):
