@@ -97,3 +97,26 @@ def test_rotas_de_lote_nao_sao_capturadas_como_uid(amb):
         r = amb.client.post(f"/admin/contas/{rota}", data={"uid": "ana"})
         assert r.status_code != 405 and r.status_code != 404, rota
     assert amb.client.get("/admin/contas/confirmacao-lote").status_code in (404, 405)
+
+
+def test_linha_de_erro_no_historico_fica_destacada(amb):
+    _conta(amb)
+    amb.banco.auditar("sistema", "erro_ldap", "ana", "falha", amb.relogio())
+    _login(amb)
+    html = amb.client.get("/admin/contas/ana").get_data(as_text=True)
+    assert '<tr class="erro">' in html and "Erro no LDAP" in html
+
+
+def test_ficha_sem_solicitacoes_nem_historico(amb):
+    _conta(amb)
+    _login(amb)
+    r = amb.client.get("/admin/contas/ana")
+    html = r.get_data(as_text=True)
+    assert r.status_code == 200
+    assert "Nenhuma solicitação ligada a esta conta." in html and "Sem registros." in html
+
+
+def test_rotulos_dos_lotes():
+    from app.web.admin import ROTULOS_ACAO
+    assert ROTULOS_ACAO["reset_lote"] == "Reset de senha em lote"
+    assert ROTULOS_ACAO["confirmacao_lote"] == "Confirmação de dados em lote"

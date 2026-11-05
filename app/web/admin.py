@@ -42,6 +42,8 @@ ROTULOS_ACAO = {
     "convite_preenchido": "Convite por e-mail preenchido",
     "convite_cancelado": "Convite cancelado",
     "lote_enviado": "Convites em lote enviados",
+    "reset_lote": "Reset de senha em lote",
+    "confirmacao_lote": "Confirmação de dados em lote",
 }
 
 
