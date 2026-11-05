@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block conteudo %}
+<h1>Confira seus dados</h1>
+<p>Estes são os dados de cadastro do usuário <strong>{{ conta.uid }}</strong>.</p>
+<table>
+  <tr><th>Nome</th><td>{{ conta.cn or 'não informado' }}</td></tr>
+  <tr><th>CPF</th><td>{{ conta.cpf|cpf if conta.cpf else 'não informado' }}</td></tr>
+  <tr><th>E-mail</th><td>{{ conta.mail or 'não informado' }}</td></tr>
+  <tr><th>Telefone</th><td>{{ conta.telefone|telefone if conta.telefone else 'não informado' }}</td></tr>
+</table>
+{% if not completa %}<div class="card-faltam">
+  <p>Faltam dados no seu cadastro. Complete-os para continuar.</p>
+  <a class="botao" href="{{ url_for('publico.corrigir_dados_form', token=token) }}">Completar meus dados</a>
+</div>{% endif %}
+<div class="aviso">{{ privacidade|safe }}</div>
+<form method="post">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <label class="check"><input type="checkbox" name="consentimento" value="sim">
+    Li o aviso de privacidade e concordo com o tratamento dos meus dados para a finalidade descrita.</label>
+  {% if erro %}<p class="erro">{{ erro }}</p>{% endif %}
+  <button type="submit"{% if not completa %} disabled{% endif %}>Meus dados estão corretos</button>
+</form>
+{% if completa %}<p><a href="{{ url_for('publico.corrigir_dados_form', token=token) }}">Preciso corrigir</a></p>{% endif %}
+{% endblock %}

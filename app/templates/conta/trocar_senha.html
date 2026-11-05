@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block conteudo %}
+<h1>Trocar senha</h1>
+<p>A nova senha precisa ter no mínimo 6 caracteres, com letra maiúscula, letra minúscula, dígito e caractere especial.</p>
+{% if erros %}<div class="erro" role="alert"><p>Ajuste a senha:</p><ul>{% for e in erros %}<li>{{ e }}</li>{% endfor %}</ul></div>{% endif %}
+<form method="post">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <label for="atual">Senha atual</label>
+  <input id="atual" name="atual" type="password" autocomplete="current-password" required>
+  <label for="senha">Nova senha</label>
+  <input id="senha" name="senha" type="password" autocomplete="new-password" required>
+  <label for="confirmacao">Repita a nova senha</label>
+  <input id="confirmacao" name="confirmacao" type="password" autocomplete="new-password" required>
+  <button type="submit">Trocar senha</button>
+</form>
+<p><a href="{{ url_for('conta.home') }}">Voltar</a></p>
+{% endblock %}

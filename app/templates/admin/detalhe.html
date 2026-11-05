@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block largura %}largo{% endblock %}
+{% block conteudo %}
+{% include "admin/_nav.html" %}
+<h1>Solicitação <span class="id-badge">#{{ sol.id }}</span> <span class="pill st-{{ sol.status }}">{{ rotulos.get(sol.status, sol.status) }}</span></h1>
+{% if erro %}<p class="erro">{{ erro }}</p>{% endif %}
+<dl class="dados">
+  <dt>Nome</dt><dd>{{ sol.nome or '—' }}</dd>
+  <dt>CPF</dt><dd>{{ sol.cpf|cpf }}</dd>
+  <dt>E-mail</dt><dd>{{ sol.email }}</dd>
+  <dt>Telefone</dt><dd>{{ sol.telefone|telefone }}</dd>
+  <dt>Recebida em</dt><dd>{{ sol.criado_em|data }}</dd>
+  <dt>Origem</dt><dd>{% if sol.origem == 'convite' %}Convite (por {{ sol.convidado_por }}){% elif sol.origem == 'convite_email' %}Convite por e-mail (por {{ sol.convidado_por }}){% elif sol.origem == 'alteracao' %}Alteração de dados da conta {{ sol.uid_sugerido }}{% else %}Formulário{% endif %}</dd>
+  <dt>E-mail confirmado em</dt><dd>{{ sol.confirmado_em|data or '—' }}</dd>
+  <dt class="inteiro">Justificativa</dt><dd class="inteiro">{{ sol.justificativa }}</dd>
+  <dt class="inteiro">Consentimento</dt><dd class="inteiro">{% if consentimento %}aviso {{ consentimento.versao_aviso[:12] }} ·
+      aceito em {{ consentimento.aceito_em|data }} · IP {{ consentimento.ip }}{% else %}—{% endif %}</dd>
+  {% if sol.status == 'aprovada' %}
+  <dt class="inteiro">Conta</dt><dd class="inteiro">{{ sol.uid_final }} · {{ sol.organizacao }} · por {{ sol.decidido_por }}
+      em {{ sol.decidido_em|data }}
+      {% if not sol.link_enviado %}· <strong class="erro">link não enviado</strong>{% endif %}</dd>
+  {% elif sol.status == 'convidado' %}
+  <dt class="inteiro">Convite</dt><dd class="inteiro">{% if sol.uid_sugerido %}usuário {{ sol.uid_sugerido }} · {% endif %}cliente {{ sol.organizacao }}
+      {% if not sol.link_enviado %}· <strong class="erro">link não enviado</strong>{% endif %}</dd>
+  {% elif sol.status == 'rejeitada' %}
+  <dt class="inteiro">Rejeitada</dt><dd class="inteiro">por {{ sol.decidido_por }} em {{ sol.decidido_em|data }}
+      — {{ sol.motivo }}</dd>
+  {% endif %}
+</dl>
+
+{% if sol.origem == 'alteracao' and sol.status in ('pendente', 'aprovando') %}
+<h2>Alteração de dados</h2>
+{% if atual %}
+<div class="tabela">
+<table class="lista">
+  <thead><tr><th>Campo</th><th>Atual (LDAP)</th><th>Novo</th></tr></thead>
+  <tbody>
+  {% for campo, rotulo, de, para in [("nome", "Nome", atual.cn, sol.nome), ("cpf", "CPF", atual.cpf|cpf, sol.cpf|cpf),
+                                     ("email", "E-mail", atual.mail, sol.email),
+                                     ("telefone", "Telefone", atual.telefone|telefone, sol.telefone|telefone)] %}
+  <tr><td>{{ rotulo }}</td><td>{{ de or '—' }}</td><td>{% if campo in alterados %}<strong>{{ para }}</strong>{% else %}{{ para }}{% endif %}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% if 'email' in alterados %}<p>O link para definir a senha irá para o e-mail novo.</p>{% endif %}
+{% else %}<p class="erro">A conta {{ sol.uid_sugerido }} não existe mais no LDAP.</p>{% endif %}
+{% endif %}
+
+{% if conflitos.uid or conflitos.cpf or conflitos.mail %}
+<div class="aviso">Já existe no LDAP:
+  {% if conflitos.uid %} usuário {{ conflitos.uid|join(', ') }};{% endif %}
+  {% if conflitos.cpf %} CPF na conta {{ conflitos.cpf|join(', ') }};{% endif %}
+  {% if conflitos.mail %} e-mail na conta {{ conflitos.mail|join(', ') }}.{% endif %}
+</div>
+{% endif %}
+
+{% if sol.status == 'pendente' %}
+<div class="colunas">
+<section>
+<h2>Aprovar</h2>
+<form method="post" action="{{ url_for('admin.aprovar', sid=sol.id) }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  {% if sol.origem != 'alteracao' %}
+  <label for="uid">Usuário (uid)</label>
+  <input id="uid" name="uid" value="{{ sol.uid_sugerido }}" required>
+  <label for="organizacao">Cliente</label>
+  <select id="organizacao" name="organizacao" required>
+    <option value="">— escolha —</option>
+    {% for o in orgs %}<option{% if o == sol.organizacao %} selected{% endif %}>{{ o }}</option>{% endfor %}
+    <option value="__nova__"{% if org_nova %} selected{% endif %}>Novo cliente…</option>
+  </select>
+  <label for="organizacao_nova">Nome do novo cliente (só se escolheu "Novo cliente")</label>
+  <input id="organizacao_nova" name="organizacao_nova" value="{{ org_nova }}">
+  <label class="check"><input type="checkbox" name="confirmar_nova" value="sim"> Confirmo a criação do cliente novo</label>
+  {% endif %}
+  {% if conflitos.cpf or conflitos.mail %}
+  <label class="check"><input type="checkbox" name="confirmar_outra_pessoa" value="sim"> Confirmo que é outra pessoa</label>
+  {% endif %}
+  <button type="submit">{{ 'Aprovar alteração e enviar link' if sol.origem == 'alteracao' else 'Aprovar e enviar link' }}</button>
+</form>
+</section>
+<section>
+<h2>Rejeitar</h2>
+<form method="post" action="{{ url_for('admin.rejeitar', sid=sol.id) }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <label for="motivo">Motivo (opcional)</label><input id="motivo" name="motivo">
+  <label class="check"><input type="checkbox" name="avisar" value="sim"> Avisar a pessoa por e-mail</label>
+  <button type="submit">Rejeitar</button>
+</form>
+</section>
+</div>
+{% elif sol.status == 'aprovando' %}
+<h2>Em aprovação</h2>
+{% if sol.origem == 'alteracao' %}
+<p>A aprovação foi interrompida no meio. Volte a solicitação para pendente e aprove de novo
+(reaplicar a alteração é seguro).</p>
+{% else %}
+<p>A aprovação foi interrompida no meio. Confira no LDAP se a conta foi criada; se não foi, volte a solicitação
+para pendente e aprove de novo.</p>
+{% endif %}
+<form method="post" action="{{ url_for('admin.destravar', sid=sol.id) }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <button type="submit">Voltar para pendente</button>
+</form>
+{% elif sol.status == 'convidado' %}
+<div class="colunas">
+<form method="post" action="{{ url_for('admin.reenviar_convite', sid=sol.id) }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <button type="submit">Reenviar convite</button>
+</form>
+<form method="post" action="{{ url_for('admin.cancelar_convite', sid=sol.id) }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <button type="submit">Cancelar convite</button>
+</form>
+</div>
+{% elif sol.status == 'aprovada' %}
+<form method="post" action="{{ url_for('admin.reenviar', sid=sol.id) }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <button type="submit">Reenviar link de definir senha</button>
+</form>
+{% endif %}
+
+<h2>Histórico</h2>
+{% if historico %}
+<div class="tabela">
+<table class="lista">
+  <thead><tr><th>Quando</th><th>Quem</th><th>Ação</th><th>Detalhe</th></tr></thead>
+  <tbody>
+  {% for h in historico %}
+  <tr{% if h.acao in acoes_erro %} class="erro"{% endif %}>
+    <td>{{ h.quando|data }}</td><td>{{ h.ator }}</td><td>{{ h.acao }}</td><td class="quebra">{{ h.detalhe }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}<p>Sem registros.</p>{% endif %}
+{% endblock %}

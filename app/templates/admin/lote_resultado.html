@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block largura %}largo{% endblock %}
+{% block conteudo %}
+{% include "admin/_nav.html" %}
+<h1>Convites do lote</h1>
+<p>Cliente: {{ org }}. Enviados: {{ contagem['enviado'] }} · Falhas de envio: {{ contagem['falha de envio'] }}
+  (reenvie pelo detalhe) · Bloqueados: {{ contagem['bloqueado'] }}.</p>
+<div class="tabela">
+<table class="lista">
+  <thead><tr><th>Linha</th><th>Nome</th><th>E-mail</th><th>Usuário</th><th>Resultado</th><th>Solicitação</th></tr></thead>
+  <tbody>
+  {% for r in resultados %}
+  <tr{% if r.resultado != 'enviado' %} class="erro"{% endif %}>
+    <td>{{ r.linha }}</td>
+    <td>{{ r.dados.nome }}</td>
+    <td>{{ r.dados.email }}</td>
+    <td>{{ r.uid }}</td>
+    <td>{{ r.resultado }}{% if r.motivo %}: {{ r.motivo }}{% endif %}</td>
+    <td>{% if r.sid %}<a class="id-badge" href="{{ url_for('admin.detalhe', sid=r.sid) }}">#{{ r.sid }}</a>{% else %}—{% endif %}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+<p><a href="{{ url_for('admin.lote_upload') }}">Enviar outra planilha</a></p>
+{% endblock %}

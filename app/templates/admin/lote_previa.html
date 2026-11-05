@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block largura %}largo{% endblock %}
+{% block conteudo %}
+{% include "admin/_nav.html" %}
+<h1>Prévia do lote</h1>
+<p>Linhas com erro não podem ser enviadas. Conflito de usuário se corrige editando o uid. Quem já existe no LDAP
+  só é convidado marcando "é outra pessoa". A prévia vale por 1 hora.</p>
+{% if erro %}<p class="erro">{{ erro }}</p>{% endif %}
+<form method="post" action="{{ url_for('admin.lote_previa', lid=lid) }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="tabela">
+  <table class="lista">
+    <thead>
+      <tr><th>Enviar</th><th>Linha</th><th>Nome</th><th>CPF</th><th>E-mail</th><th>Telefone</th><th>Usuário (uid)</th><th>Situação</th></tr>
+    </thead>
+    <tbody>
+    {% for item in itens %}
+    {% set marcada = (item.i in marcadas) if marcadas is not none else item.marcada %}
+    <tr{% if item.erros %} class="erro"{% endif %}>
+      <td><input type="checkbox" name="enviar_{{ item.i }}" value="sim" aria-label="Enviar a linha {{ item.linha }}"
+                 {%- if marcada and not item.erros %} checked{% endif %}{% if item.erros %} disabled{% endif %}></td>
+      <td>{{ item.linha }}</td>
+      <td>{{ item.dados.nome }}</td>
+      <td>{{ item.dados.cpf|cpf }}</td>
+      <td>{{ item.dados.email }}</td>
+      <td>{{ item.dados.telefone|telefone }}</td>
+      <td><input name="uid_{{ item.i }}" value="{{ item.uid }}" aria-label="Usuário da linha {{ item.linha }}"
+                 {%- if item.erros %} disabled{% endif %}></td>
+      <td>
+        {% for msg in item.erros.values() %}<p class="erro">{{ msg }}</p>{% endfor %}
+        {% if item.erro_uid %}<p class="erro">{{ item.erro_uid }}</p>{% endif %}
+        {% if item.existe %}
+        <p class="aviso">Já existe no LDAP:
+          {% if item.conflitos.cpf %} CPF na conta {{ item.conflitos.cpf|join(', ') }};{% endif %}
+          {% if item.conflitos.mail %} e-mail na conta {{ item.conflitos.mail|join(', ') }}.{% endif %}</p>
+        <label class="check"><input type="checkbox" name="outra_pessoa_{{ item.i }}" value="sim"
+          {%- if form.get('outra_pessoa_' ~ item.i) == 'sim' %} checked{% endif %}> É outra pessoa</label>
+        {% endif %}
+        {% if not (item.erros or item.erro_uid or item.existe) %}ok{% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  <label for="organizacao">Cliente do lote</label>
+  <select id="organizacao" name="organizacao" required>
+    <option value="">— escolha —</option>
+    {% for o in orgs %}<option{% if o == form.get('organizacao') %} selected{% endif %}>{{ o }}</option>{% endfor %}
+    <option value="__nova__"{% if form.get('organizacao') == '__nova__' %} selected{% endif %}>Novo cliente…</option>
+  </select>
+  <label for="organizacao_nova">Nome do novo cliente (só se escolheu "Novo cliente")</label>
+  <input id="organizacao_nova" name="organizacao_nova" value="{{ form.get('organizacao_nova', '') }}">
+  <label class="check"><input type="checkbox" name="confirmar_nova" value="sim"> Confirmo a criação do cliente novo</label>
+  <button type="submit">Enviar convites</button>
+</form>
+{% endblock %}

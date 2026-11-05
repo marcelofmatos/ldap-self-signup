@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block largura %}largo{% endblock %}
+{% macro tabela(lista) %}
+<div class="tabela">
+<table class="lista">
+  <thead><tr><th>Usuário</th><th>Nome</th><th>E-mail</th><th>Cliente</th></tr></thead>
+  <tbody>
+  {% for c in lista %}
+  <tr><td>{{ c.uid }}</td><td>{{ c.cn }}</td><td>{{ c.mail or '—' }}</td><td>{{ c.ou or '—' }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endmacro %}
+{% block conteudo %}
+{% include "admin/_nav.html" %}
+<h1>{{ acao.titulo }}</h1>
+{% if erro %}
+<p class="erro">{{ erro }}</p>
+{% else %}
+{% set n = alvo.com_email|length %}
+<p><strong>{{ n }} {{ acao.um if n == 1 else acao.varias }}</strong> ({{ acao.nota }}).</p>
+{{ tabela(alvo.com_email) }}
+{% if alvo.sem_email %}
+<h2>Sem e-mail — serão puladas ({{ alvo.sem_email|length }})</h2>
+{{ tabela(alvo.sem_email) }}
+{% endif %}
+{% if alvo.nao_encontradas %}
+<h2>Não encontradas no LDAP — serão puladas ({{ alvo.nao_encontradas|length }})</h2>
+<p>{{ alvo.nao_encontradas|join(', ') }}</p>
+{% endif %}
+<form method="post" action="{{ url_for(acao.envio) }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  {% if alvo.filtro.todos_do_filtro %}
+  <input type="hidden" name="todos_do_filtro" value="sim">
+  <input type="hidden" name="q" value="{{ alvo.filtro.q }}">
+  <input type="hidden" name="cliente" value="{{ alvo.filtro.cliente }}">
+  {% else %}
+  {% for uid in alvo.filtro.uids %}
+  <input type="hidden" name="uid" value="{{ uid }}">
+  {% endfor %}
+  {% endif %}
+  <button type="submit" {% if not n %}disabled{% endif %}>Confirmar envio ({{ n }})</button>
+</form>
+{% endif %}
+<p><a href="{{ url_for('admin.contas_busca') }}">Voltar para a lista de contas</a></p>
+{% endblock %}

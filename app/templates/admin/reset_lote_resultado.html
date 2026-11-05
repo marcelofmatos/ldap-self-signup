@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block largura %}largo{% endblock %}
+{% block conteudo %}
+{% include "admin/_nav.html" %}
+<h1>{{ acao.titulo }}</h1>
+<p>Enviados: {{ contagem.enviados }} · Falhas de envio: {{ contagem.falhas }} (tente de novo) ·
+  Pulados: {{ contagem.sem_email + contagem.nao_encontradas }} (sem e-mail: {{ contagem.sem_email }},
+  conta não encontrada: {{ contagem.nao_encontradas }}).</p>
+<div class="tabela">
+<table class="lista">
+  <thead><tr><th>Usuário</th><th>Nome</th><th>E-mail</th><th>Resultado</th></tr></thead>
+  <tbody>
+  {% for r in resultados %}
+  <tr{% if not r.enviado %} class="erro"{% endif %}>
+    <td>{{ r.uid }}</td><td>{{ r.cn }}</td><td>{{ r.mail }}</td><td>{{ 'enviado' if r.enviado else 'falha de envio' }}</td>
+  </tr>
+  {% endfor %}
+  {% for c in alvo.sem_email %}
+  <tr><td>{{ c.uid }}</td><td>{{ c.cn }}</td><td>—</td><td>pulada: sem e-mail</td></tr>
+  {% endfor %}
+  {% for uid in alvo.nao_encontradas %}
+  <tr><td>{{ uid }}</td><td>—</td><td>—</td><td>pulada: conta não encontrada</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+<p><a href="{{ url_for('admin.contas_busca') }}">Voltar para a lista de contas</a></p>
+{% endblock %}

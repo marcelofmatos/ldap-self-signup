@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block conteudo %}
+<h1>Minha conta</h1>
+{% set vazio = 'não informado' %}
+<dl class="dados">
+  <dt>Usuário</dt><dd>{{ conta.uid }}</dd>
+  <dt>Nome</dt><dd>{{ conta.cn or vazio }}</dd>
+  <dt>CPF</dt><dd>{{ conta.cpf|cpf_mascarado or vazio }}</dd>
+  <dt>E-mail</dt><dd>{{ conta.mail or vazio }}</dd>
+  <dt>Telefone</dt><dd>{{ conta.telefone|telefone or vazio }}</dd>
+  <dt>Cliente</dt><dd>{{ conta.ou or vazio }}</dd>
+  <dt class="inteiro">Grupos</dt><dd class="inteiro">{{ grupos|join(', ') or 'nenhum' }}</dd>
+</dl>
+{% if em_aberto and em_aberto.status == 'aguardando_confirmacao' %}
+<p class="aviso">Confirme seu novo e-mail: abra o link que enviamos para ele. A correção só segue para revisão
+  depois dessa confirmação.</p>
+{% elif em_aberto %}
+<p class="aviso">Correção em análise: a equipe ainda vai revisar a correção que você enviou.</p>
+{% endif %}
+<p><a class="botao" href="{{ url_for('conta.corrigir_form') }}">Pedir correção dos dados</a>
+  <a class="botao" href="{{ url_for('conta.trocar_senha') }}">Trocar senha</a></p>
+{% if tema.servicos %}
+{% from "_icones.html" import icone %}
+<h2>Serviços</h2>
+<div class="servicos">{% for s in tema.servicos %}
+  <a class="servico" href="{{ s.url }}">{{ icone(s.icone) }}<span class="titulo">{{ s.rotulo }}</span>{% if s.descricao %}<span class="descricao">{{ s.descricao }}</span>{% endif %}</a>
+{% endfor %}</div>
+{% endif %}
+<form method="post" action="{{ url_for('conta.sair') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <button type="submit">Sair</button>
+</form>
+{% endblock %}

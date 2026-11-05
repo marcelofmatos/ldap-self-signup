@@ -1,0 +1,14 @@
+nome = "Minha Plataforma"
+# Tema de exemplo: copie esta pasta, troque nome, cores, rodapé e links, e monte-a em /template.
+# Primária com contraste AA sobre texto branco; secundária usada em destaques e foco.
+cor_primaria = "#334155"
+cor_secundaria = "#64748b"
+rodape = "Minha Plataforma — suporte: suporte@exemplo.org"
+
+# Serviços exibidos na home da conta, após definir a senha e no e-mail de conta aprovada.
+# Formato curto: rótulo = "url" (o ícone é deduzido do rótulo).
+# Formato completo: rótulo = { url = "...", icone = "...", descricao = "..." }.
+[links]
+"Arquivos" = "https://arquivos.exemplo.org/"
+"Wiki" = { url = "https://wiki.exemplo.org/", icone = "wiki", descricao = "Documentação e manuais da equipe" }
+"Chat" = { url = "https://chat.exemplo.org/", descricao = "Conversas e avisos" }

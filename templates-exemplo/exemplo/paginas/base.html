@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="/favicon.ico" sizes="any">
+{% if tema_favicon_png %}<link rel="icon" type="image/png" href="/tema/favicon.png">
+<link rel="apple-touch-icon" href="/tema/favicon.png">{% endif %}
+<title>{% block titulo %}{{ tema.nome }}{% endblock %}</title>
+<style>
+/* Tema de exemplo — fonte do sistema (sem fonte externa por LGPD), cores de tema.toml; troque à vontade */
+:root{--p:{{ tema.cor_primaria }};--s:{{ tema.cor_secundaria }};--claro:#e2e8f0;--texto:#1f2937;--suave:#6b7280;--borda:#e5e7eb}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:flex;flex-direction:column;font-family:system-ui,"Segoe UI",Roboto,Arial,sans-serif;color:var(--texto);
+  background:#fff radial-gradient(ellipse 60% 55% at 100% 0%,var(--claro) 0,var(--claro) 55%,transparent 56%) no-repeat}
+header{background:#fff;border-bottom:1px solid var(--borda);padding:14px 24px;display:flex;align-items:center;gap:16px}
+header .logo{display:flex;align-items:center;text-decoration:none;color:var(--texto)}
+header img{height:40px;width:auto}
+header .nome{font-weight:700;font-size:20px}
+header .secao{margin-left:auto;color:var(--suave);font-size:14px}
+main{flex:1;width:100%;max-width:760px;margin:40px auto;padding:0 16px}
+.card{background:#fff;border:1px solid var(--borda);border-radius:12px;padding:32px;box-shadow:0 10px 30px -12px #1f293733}
+h1{font-size:30px;font-weight:600;line-height:1.2;margin:0 0 20px;position:relative;display:inline-block;z-index:0}
+h1::after{content:"";position:absolute;left:0;bottom:4px;width:55%;height:10px;background:var(--s);opacity:.35;z-index:-1}
+h2{font-size:20px;font-weight:600;color:var(--p);margin:28px 0 12px}
+a{color:var(--p)}
+label{display:block;margin:16px 0 6px;font-weight:500}
+label.check{font-weight:400}
+label.check input{width:auto;margin-right:8px}
+input,textarea,select{width:100%;padding:11px 12px;border:1px solid #d1d5db;border-radius:8px;font:inherit;color:var(--texto);background:#fff}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--s);outline-offset:1px;border-color:var(--s)}
+button{background:var(--p);color:#fff;border:0;border-radius:8px;padding:11px 22px;font:inherit;font-weight:500;cursor:pointer;margin-top:20px}
+button:hover{filter:brightness(1.08)}
+button:disabled{opacity:.5;cursor:not-allowed;filter:none}
+.erro{color:#b91c1c}
+.aviso{background:#f9fafb;border-left:4px solid var(--s);border-radius:0 8px 8px 0;padding:12px 16px;margin:16px 0;color:#374151}
+.flash{background:var(--claro);border-left:4px solid var(--p);border-radius:0 8px 8px 0;padding:12px 16px;margin-bottom:16px}
+.hp{position:absolute;left:-10000px}
+table{width:100%;border-collapse:collapse}
+td,th{padding:10px 8px;border-bottom:1px solid var(--borda);text-align:left;vertical-align:top}
+th{color:var(--suave);font-weight:500;font-size:14px}
+nav{display:flex;gap:20px;align-items:center;margin-bottom:20px}
+nav a{text-decoration:none;font-weight:500}
+nav form{margin-left:auto}
+nav button{margin:0;padding:6px 14px;background:#fff;color:var(--texto);border:1px solid #d1d5db}
+.badges{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0}
+.badge{display:inline-flex;gap:6px;align-items:center;padding:5px 14px;border-radius:999px;border:1px solid var(--claro);background:#f1f5f9;color:var(--p);text-decoration:none;font-size:14px}
+.badge[aria-current]{background:var(--p);border-color:var(--p);color:#fff}
+.badge .contagem{font-weight:600}
+footer{border-top:1px solid var(--borda);padding:20px 24px;display:flex;flex-wrap:wrap;gap:8px 24px;justify-content:center;color:var(--suave);font-size:13px}
+footer a{color:var(--suave)}
+/* painel: layout largo, busca em linha, tabela de lista e status em pílula */
+main.largo{max-width:1280px;padding:0 24px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.mudo{color:var(--suave);font-size:13px}
+form.busca{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+form.busca input[type=search]{flex:1 1 160px;min-width:0;width:auto}
+form.busca button{margin:0}
+.barra{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px 16px;margin:12px 0;color:var(--suave)}
+.barra nav{margin:0}
+.tabela{overflow-x:auto}
+table.lista th{white-space:nowrap}
+table.lista td{white-space:nowrap;vertical-align:middle}
+table.lista tbody tr{position:relative}
+table.lista tbody tr:nth-child(even){background:#f9fafb}
+table.lista tbody tr:hover{background:#f1f5f9}
+table.lista button{margin:0;padding:6px 14px}
+table.lista td.quebra{white-space:normal;min-width:240px}
+td.nome strong{display:block;max-width:240px;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+.id-badge{display:inline-block;padding:2px 8px;border-radius:999px;background:var(--claro);color:var(--p);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums;font-size:13px;font-weight:600;white-space:nowrap;text-decoration:none}
+td.id a::after{content:"";position:absolute;inset:0}
+.pill{display:inline-block;padding:2px 10px;border-radius:999px;font-size:13px;font-weight:600;white-space:nowrap}
+.st-pendente{background:#fef3c7;color:#92400e}
+.st-aprovando{background:#ede9fe;color:#5b21b6}
+.st-aprovada{background:#dcfce7;color:#166534}
+.st-rejeitada{background:#fee2e2;color:#991b1b}
+.st-expirada{background:#f3f4f6;color:#4b5563}
+.st-aguardando_confirmacao{background:#dbeafe;color:#1e40af}
+.st-convidado{background:#ccfbf1;color:#115e59}
+h1 .pill,h1 .id-badge{vertical-align:middle;margin-left:8px}
+dl.dados{display:grid;grid-template-columns:max-content 1fr;gap:10px 16px;margin:16px 0}
+dl.dados dt{font-weight:500;color:var(--suave)}
+dl.dados dd{margin:0;overflow-wrap:anywhere}
+.colunas{display:grid;gap:0 32px}
+@media (min-width:900px){
+  dl.dados{grid-template-columns:max-content 1fr max-content 1fr}
+  dl.dados dt.inteiro{grid-column:1}
+  dl.dados dd.inteiro{grid-column:2/-1}
+  .colunas{grid-template-columns:1fr 1fr}
+}
+@media (max-width:600px){.card{padding:20px}h1{font-size:24px}header .secao{display:none}}
+</style>
+{% include "_componentes.html" %}
+</head>
+<body>
+<header>
+  <a class="logo" href="{{ url_for('publico.inicio') }}">{% if tema_logo %}<img src="{{ url_for('logo') }}" alt="{{ tema.nome }}">{% else %}<span class="nome">{{ tema.nome }}</span>{% endif %}</a>
+  <span class="secao">Cadastro de acesso</span>
+</header>
+<main class="{% block largura %}estreito{% endblock %}">
+{% for mensagem in get_flashed_messages() %}<div class="flash">{{ mensagem }}</div>{% endfor %}
+<div class="card">{% block conteudo %}{% endblock %}</div>
+</main>
+<footer>
+  <span>{{ tema.rodape }}</span>
+  <a href="{{ url_for('publico.privacidade') }}">Aviso de privacidade</a>
+  <a href="https://www.exemplo.org/" rel="noopener">www.exemplo.org</a>
+</footer>
+</body>
+</html>

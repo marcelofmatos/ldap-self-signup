@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block conteudo %}
+<h1>Recebemos sua correção</h1>
+{% if email_novo %}
+<p>Enviamos um link para <strong>{{ email_novo }}</strong>. Abra-o para confirmar o novo e-mail: a correção só segue
+  para revisão da equipe depois dessa confirmação.</p>
+{% else %}
+<p>Depois da revisão pela equipe você receberá, por e-mail, o link para definir sua senha.</p>
+{% endif %}
+{% endblock %}

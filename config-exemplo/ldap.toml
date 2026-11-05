@@ -1,0 +1,19 @@
+# Exemplo de configuração do diretório OpenLDAP (posixAccount).
+# Montar em /config/ldap.toml (só leitura). A senha do bind NUNCA vai aqui: vem do Docker secret em bind_pw_file.
+
+[servidor]
+url = "ldaps://ldap.exemplo.org:636"
+bind_dn = "cn=admin,dc=exemplo,dc=org"
+bind_pw_file = "/run/secrets/ldap_bind_pw"
+
+[contas]
+# Onde as contas são criadas e buscadas, e o grupo posix padrão (gidNumber dele em gid_padrao).
+base = "ou=Users,dc=exemplo,dc=org"
+grupo_padrao = "cn=Usuario,ou=Groups,dc=exemplo,dc=org"
+gid_padrao = 10000
+
+[admins]
+# Quem entra no painel /admin (login com a própria senha LDAP): quem está na lista OU no grupo.
+# Lista fixa: garante o acesso de um administrador mesmo se o grupo for alterado.
+uids = ["admin"]
+grupo = "cn=Admins,ou=Groups,dc=exemplo,dc=org"

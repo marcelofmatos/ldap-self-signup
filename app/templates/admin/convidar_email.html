@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block largura %}largo{% endblock %}
+{% block conteudo %}
+{% include "admin/_nav.html" %}
+<h1>Convidar por e-mail</h1>
+<p>A pessoa recebe um link, preenche nome, CPF e telefone, e a solicitação vai para aprovação.</p>
+{% if erro %}<p class="erro">{{ erro }}</p>{% endif %}
+{% if resultados is not none %}
+<p>Cliente: {{ cliente }}. Enviados: {{ contagem['enviado'] }} · Falhas de envio: {{ contagem['falha de envio'] }}
+  (reenvie pelo detalhe) · Pulados: {{ contagem['pulado'] }}.</p>
+<div class="tabela">
+<table class="lista">
+  <thead><tr><th>E-mail</th><th>Resultado</th><th>Solicitação</th></tr></thead>
+  <tbody>
+  {% for r in resultados %}
+  <tr{% if r.resultado != 'enviado' %} class="erro"{% endif %}>
+    <td>{{ r.email }}</td>
+    <td>{{ r.resultado }}{% if r.motivo %}: {{ r.motivo }}{% endif %}</td>
+    <td>{% if r.sid %}<a class="id-badge" href="{{ url_for('admin.detalhe', sid=r.sid) }}">#{{ r.sid }}</a>{% else %}—{% endif %}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+<p><a href="{{ url_for('admin.convidar_por_email') }}">Convidar mais</a></p>
+{% else %}
+<form method="post" action="{{ url_for('admin.convidar_por_email') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <label for="organizacao">Cliente</label>
+  <select id="organizacao" name="organizacao" required>
+    <option value="">— escolha —</option>
+    {% for o in orgs %}<option{% if o == form.organizacao %} selected{% endif %}>{{ o }}</option>{% endfor %}
+    <option value="__nova__"{% if form.organizacao == '__nova__' %} selected{% endif %}>Novo cliente…</option>
+  </select>
+  <label for="organizacao_nova">Nome do novo cliente (só se escolheu "Novo cliente")</label>
+  <input id="organizacao_nova" name="organizacao_nova" value="{{ form.organizacao_nova }}">
+  <label class="check"><input type="checkbox" name="confirmar_nova" value="sim"{% if form.confirmar_nova == 'sim' %} checked{% endif %}> Confirmo a criação do cliente novo</label>
+  {% if linhas is none %}
+  <label for="emails">E-mails (um por linha, ou separados por vírgula, ponto e vírgula ou espaço)</label>
+  <textarea id="emails" name="emails" rows="8" required>{{ form.emails }}</textarea>
+  <button type="submit" name="acao" value="previa">Conferir</button>
+  {% else %}
+  <input type="hidden" name="emails" value="{{ form.emails }}">
+  <div class="tabela">
+  <table class="lista">
+    <thead><tr><th></th><th>E-mail</th><th>Situação</th></tr></thead>
+    <tbody>
+    {% for l in linhas %}
+    <tr{% if l.motivo %} class="erro"{% endif %}>
+      <td>{% if not l.motivo %}<input type="checkbox" name="email" value="{{ l.email }}" checked aria-label="Enviar para {{ l.email }}">{% endif %}</td>
+      <td>{{ l.email }}</td>
+      <td>{% if l.motivo %}{{ l.motivo }}{% elif l.substitui %}substitui o convite #{{ l.substitui }}{% else %}pronto para enviar{% endif %}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% if linhas|selectattr('motivo', 'none')|list %}<button type="submit" name="acao" value="enviar">Enviar convites</button>{% endif %}
+  <button type="submit" name="acao" value="voltar" formnovalidate>Voltar</button>
+  {% endif %}
+</form>
+{% endif %}
+{% endblock %}

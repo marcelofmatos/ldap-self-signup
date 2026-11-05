@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block conteudo %}
+<h1>Confira seus dados</h1>
+<table>
+  <tr><th>Nome</th><td>{{ dados.nome }}</td></tr>
+  <tr><th>CPF</th><td>{{ dados.cpf|cpf }}</td></tr>
+  <tr><th>E-mail</th><td>{{ dados.email }}</td></tr>
+  <tr><th>Telefone</th><td>{{ dados.telefone|telefone }}</td></tr>
+  <tr><th>Justificativa</th><td>{{ dados.justificativa }}</td></tr>
+</table>
+<div class="aviso">{{ privacidade|safe }}</div>
+<form method="post" action="{{ url_for('publico.confirmar') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <input type="hidden" name="pacote" value="{{ pacote }}">
+  <label class="check"><input type="checkbox" name="consentimento" value="sim">
+    Li o aviso de privacidade e concordo com o tratamento dos meus dados para a finalidade descrita.</label>
+  {% if erro %}<p class="erro">{{ erro }}</p>{% endif %}
+  <button type="submit">Confirmar e enviar</button>
+</form>
+<p><a href="javascript:history.back()">Voltar e corrigir</a></p>
+{% endblock %}

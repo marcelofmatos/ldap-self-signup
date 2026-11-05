@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="/favicon.ico" sizes="any">
+{% if tema_favicon_png %}<link rel="icon" type="image/png" href="/tema/favicon.png">
+<link rel="apple-touch-icon" href="/tema/favicon.png">{% endif %}
+<title>{% block titulo %}{{ tema.nome }}{% endblock %}</title>
+<style>
+:root{--p:{{ tema.cor_primaria }};--s:{{ tema.cor_secundaria }}}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,"Segoe UI",Roboto,Arial,sans-serif;color:#1d2733;background:#f5f8fb}
+header{background:var(--p);color:#fff;padding:16px 24px;display:flex;align-items:center;gap:12px}
+header img{height:40px}
+main{max-width:760px;margin:24px auto;padding:0 16px}
+.card{background:#fff;border-radius:8px;padding:24px;box-shadow:0 1px 3px #0002}
+label{display:block;margin:14px 0 4px;font-weight:600}
+label.check{font-weight:400}
+label.check input{margin-right:8px}
+input,textarea,select{width:100%;padding:10px;border:1px solid #c5d3e0;border-radius:6px;font:inherit}
+button{background:var(--p);color:#fff;border:0;border-radius:6px;padding:10px 18px;font:inherit;cursor:pointer;margin-top:16px}
+button:disabled{opacity:.5;cursor:not-allowed}
+.erro{color:#b42318}
+.aviso{background:#fff6e9;border-left:4px solid #f59e0b;padding:10px 14px;margin:12px 0}
+.flash{background:#e8f3fc;border-left:4px solid var(--s);padding:10px 14px;margin-bottom:12px}
+.hp{position:absolute;left:-10000px}
+table{width:100%;border-collapse:collapse}
+td,th{padding:8px;border-bottom:1px solid #e3ebf3;text-align:left;vertical-align:top}
+nav{display:flex;gap:16px;align-items:center;margin-bottom:16px}
+nav form{margin-left:auto}
+nav button{margin:0;padding:6px 12px}
+.badges{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0}
+.badge{display:inline-flex;gap:6px;align-items:center;padding:4px 12px;border-radius:999px;border:1px solid var(--s);color:var(--p);text-decoration:none;font-size:14px}
+.badge[aria-current]{background:var(--p);border-color:var(--p);color:#fff}
+.badge .contagem{font-weight:600}
+footer{text-align:center;color:#6b7785;font-size:13px;margin:24px}
+/* painel: layout largo, busca em linha, tabela de lista e status em pílula */
+main.largo{max-width:1280px;padding:0 24px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.mudo{color:#6b7785;font-size:13px}
+form.busca{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+form.busca input[type=search]{flex:1 1 160px;min-width:0;width:auto}
+form.busca button{margin:0}
+.barra{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px 16px;margin:12px 0}
+.barra nav{margin:0}
+.tabela{overflow-x:auto}
+table.lista th{white-space:nowrap;font-size:14px;color:#6b7785;font-weight:600}
+table.lista td{white-space:nowrap;vertical-align:middle}
+table.lista tbody tr{position:relative}
+table.lista tbody tr:nth-child(even){background:#f8fafc}
+table.lista tbody tr:hover{background:#eef4fb}
+table.lista button{margin:0;padding:6px 12px}
+table.lista td.quebra{white-space:normal;min-width:240px}
+td.nome strong{display:block;max-width:240px;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+.id-badge{display:inline-block;padding:2px 8px;border-radius:999px;background:color-mix(in srgb,var(--p) 12%,#fff);color:var(--p);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums;font-size:13px;font-weight:600;white-space:nowrap;text-decoration:none}
+td.id a::after{content:"";position:absolute;inset:0}
+.pill{display:inline-block;padding:2px 10px;border-radius:999px;font-size:13px;font-weight:600;white-space:nowrap}
+.st-pendente{background:#fef3c7;color:#92400e}
+.st-aprovando{background:#ede9fe;color:#5b21b6}
+.st-aprovada{background:#dcfce7;color:#166534}
+.st-rejeitada{background:#fee2e2;color:#991b1b}
+.st-expirada{background:#f3f4f6;color:#4b5563}
+.st-aguardando_confirmacao{background:#dbeafe;color:#1e40af}
+.st-convidado{background:#ccfbf1;color:#115e59}
+h1 .pill,h1 .id-badge{vertical-align:middle;margin-left:8px}
+dl.dados{display:grid;grid-template-columns:max-content 1fr;gap:8px 16px;margin:16px 0}
+dl.dados dt{font-weight:600;color:#6b7785}
+dl.dados dd{margin:0;overflow-wrap:anywhere}
+.colunas{display:grid;gap:0 32px}
+@media (min-width:900px){
+  dl.dados{grid-template-columns:max-content 1fr max-content 1fr}
+  dl.dados dt.inteiro{grid-column:1}
+  dl.dados dd.inteiro{grid-column:2/-1}
+  .colunas{grid-template-columns:1fr 1fr}
+}
+</style>
+{% include "_componentes.html" %}
+</head>
+<body>
+<header>{% if tema_logo %}<img src="{{ url_for('logo') }}" alt="">{% endif %}<strong>{{ tema.nome }}</strong></header>
+<main class="{% block largura %}estreito{% endblock %}">
+{% for mensagem in get_flashed_messages() %}<div class="flash">{{ mensagem }}</div>{% endfor %}
+<div class="card">{% block conteudo %}{% endblock %}</div>
+</main>
+<footer>{{ tema.rodape }}</footer>
+</body>
+</html>

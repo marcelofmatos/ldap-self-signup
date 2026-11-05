@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block largura %}largo{% endblock %}
+{% macro barra() %}
+<div class="barra">
+  <span>{{ total }} {{ 'resultado' if total == 1 else 'resultados' }}</span>
+  {% if paginas > 1 %}
+  <nav class="paginacao">
+    {% if pagina > 1 %}<a href="{{ url_for('admin.lista', q=q or None, status=status, pagina=pagina - 1) }}">← anterior</a>{% endif %}
+    <span>página {{ pagina }} de {{ paginas }}</span>
+    {% if pagina < paginas %}<a href="{{ url_for('admin.lista', q=q or None, status=status, pagina=pagina + 1) }}">próxima →</a>{% endif %}
+  </nav>
+  {% endif %}
+</div>
+{% endmacro %}
+{% block conteudo %}
+{% include "admin/_nav.html" %}
+<h1>Solicitações</h1>
+{% set presas = contagens.get('aprovando', 0) %}
+{% if presas and status not in ('aprovando', 'todos') %}
+<div class="aviso">{{ presas }} {{ 'solicitação' if presas == 1 else 'solicitações' }} em aprovação — verificar:
+  <a href="{{ url_for('admin.lista', status='aprovando') }}">ver</a></div>
+{% endif %}
+<form method="get" action="{{ url_for('admin.lista') }}" class="busca" role="search">
+  <input type="hidden" name="status" value="{{ status }}">
+  <label for="q" class="sr-only">Buscar solicitações — para filtrar por status, use os botões abaixo</label>
+  <input id="q" name="q" type="search" value="{{ q }}"
+         placeholder="Buscar por nome, CPF, e-mail, telefone, justificativa, usuário, cliente…">
+  <button type="submit">Buscar</button>
+  {% if q %}<a href="{{ url_for('admin.lista', status=status) }}">Limpar</a>{% endif %}
+</form>
+<p class="badges">
+  {% for valor, rotulo in rotulos.items() %}
+  <a class="badge" href="{{ url_for('admin.lista', q=q or None, status=valor) }}"
+     {%- if valor == status %} aria-current="page"{% endif %}>{{ rotulo }} <span class="contagem">{{ contagens.get(valor, 0) }}</span></a>
+  {% endfor %}
+</p>
+{{ barra() }}
+{% if solicitacoes %}
+<div class="tabela">
+<table class="lista">
+  <thead>
+    <tr><th>#</th><th>Nome</th><th>E-mail</th><th>Telefone</th><th>Status</th><th>Cliente</th><th>Usuário</th><th>Criada em</th></tr>
+  </thead>
+  <tbody>
+  {% for s in solicitacoes %}
+  <tr>
+    <td class="id"><a class="id-badge" href="{{ url_for('admin.detalhe', sid=s.id) }}"
+        aria-label="Abrir solicitação {{ s.id }}">#{{ s.id }}</a></td>
+    <td class="nome"><strong title="{{ s.nome or s.email }}">{{ s.nome or s.email }}</strong>
+      <span class="mudo">{{ s.cpf|cpf }}</span></td>
+    <td>{{ s.email }}</td>
+    <td>{{ s.telefone|telefone }}</td>
+    <td><span class="pill st-{{ s.status }}">{{ rotulos.get(s.status, s.status) }}</span>
+      {% if s.origem == 'alteracao' %}<span class="pill st-alteracao">alteração</span>{% endif %}
+      {% if s.status in ('aprovada', 'convidado') and not s.link_enviado %}<strong class="erro">link não enviado</strong>{% endif %}</td>
+    <td>{{ s.organizacao or '—' }}</td>
+    <td>{% if s.uid_final %}{{ s.uid_final }}{% else %}<span class="mudo">{{ s.uid_sugerido }}</span>{% endif %}</td>
+    <td>{{ s.criado_em|data }}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{{ barra() }}
+{% else %}<p>Nenhuma solicitação encontrada.</p>{% endif %}
+{% endblock %}

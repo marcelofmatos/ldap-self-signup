@@ -1,0 +1,10 @@
+<nav>
+  <a href="{{ url_for('admin.lista') }}">Solicitações</a>
+  <a href="{{ url_for('admin.contas_busca') }}">Contas</a>
+  <a href="{{ url_for('admin.convidar') }}">Convidar</a>
+  <a href="{{ url_for('admin.convidar_por_email') }}">Convidar por e-mail</a>
+  <form method="post" action="{{ url_for('admin.sair') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit">Sair ({{ session.admin }})</button>
+  </form>
+</nav>

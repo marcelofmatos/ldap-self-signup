@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block conteudo %}
+<h1>Solicitar acesso</h1>
+<p class="mudo">Já tem conta? <a href="{{ url_for('conta.entrar') }}">Entrar</a>.</p>
+{% if erros.geral %}<p class="erro">{{ erros.geral }}</p>{% endif %}
+<form method="post" action="{{ url_for('publico.revisar') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="hp" aria-hidden="true"><label>Site <input name="site" tabindex="-1" autocomplete="off"></label></div>
+  {% for campo, rotulo, tipo in [("nome", "Nome completo", "text"), ("cpf", "CPF", "text"),
+                                  ("email", "E-mail", "email"), ("telefone", "Telefone com DDD", "tel")] %}
+  <label for="{{ campo }}">{{ rotulo }}</label>
+  <input id="{{ campo }}" name="{{ campo }}" type="{{ tipo }}" value="{{ form.get(campo, '') }}" required>
+  {% if erros[campo] %}<p class="erro">{{ erros[campo] }}</p>{% endif %}
+  {% endfor %}
+  <label for="justificativa">Por que precisa de acesso / quem indicou</label>
+  <textarea id="justificativa" name="justificativa" rows="4" required>{{ form.get('justificativa', '') }}</textarea>
+  {% if erros.justificativa %}<p class="erro">{{ erros.justificativa }}</p>{% endif %}
+  <p><a href="{{ url_for('publico.privacidade') }}" target="_blank" rel="noopener">Aviso de privacidade</a></p>
+  <button type="submit">Revisar dados</button>
+</form>
+{% endblock %}

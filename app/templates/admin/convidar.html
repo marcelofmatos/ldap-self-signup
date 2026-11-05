@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block largura %}largo{% endblock %}
+{% block conteudo %}
+{% include "admin/_nav.html" %}
+<h1>Convidar</h1>
+<p>A pessoa recebe por e-mail um link para conferir os dados e aceitar; a conta é criada no aceite.</p>
+<p><a href="{{ url_for('admin.lote_upload') }}">Convidar em lote (planilha .xlsx ou .csv)</a></p>
+{% if erros.geral %}<p class="erro">{{ erros.geral }}</p>{% endif %}
+{% if conflitos.uid or conflitos.cpf or conflitos.mail %}
+<div class="aviso">Já existe no LDAP:
+  {% if conflitos.uid %} usuário {{ conflitos.uid|join(', ') }};{% endif %}
+  {% if conflitos.cpf %} CPF na conta {{ conflitos.cpf|join(', ') }};{% endif %}
+  {% if conflitos.mail %} e-mail na conta {{ conflitos.mail|join(', ') }}.{% endif %}
+</div>
+{% endif %}
+<form method="post" action="{{ url_for('admin.convidar') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="colunas">
+  <section>
+  {% for campo, rotulo, tipo in [("nome", "Nome completo", "text"), ("cpf", "CPF", "text"),
+                                  ("email", "E-mail", "email"), ("telefone", "Telefone com DDD", "tel")] %}
+  <label for="{{ campo }}">{{ rotulo }}</label>
+  <input id="{{ campo }}" name="{{ campo }}" type="{{ tipo }}" value="{{ form.get(campo, '') }}" required>
+  {% if erros[campo] %}<p class="erro">{{ erros[campo] }}</p>{% endif %}
+  {% endfor %}
+  </section>
+  <section>
+  <label for="uid">Usuário (uid)</label>
+  <input id="uid" name="uid" value="{{ form.get('uid', '') }}" placeholder="vazio: nome + último sobrenome">
+  {% if erros.uid %}<p class="erro">{{ erros.uid }}</p>{% endif %}
+  <label for="organizacao">Cliente</label>
+  <select id="organizacao" name="organizacao" required>
+    <option value="">— escolha —</option>
+    {% for o in orgs %}<option{% if o == form.get('organizacao') %} selected{% endif %}>{{ o }}</option>{% endfor %}
+    <option value="__nova__"{% if form.get('organizacao') == '__nova__' %} selected{% endif %}>Novo cliente…</option>
+  </select>
+  <label for="organizacao_nova">Nome do novo cliente (só se escolheu "Novo cliente")</label>
+  <input id="organizacao_nova" name="organizacao_nova" value="{{ form.get('organizacao_nova', '') }}">
+  <label class="check"><input type="checkbox" name="confirmar_nova" value="sim"> Confirmo a criação do cliente novo</label>
+  {% if erros.organizacao %}<p class="erro">{{ erros.organizacao }}</p>{% endif %}
+  {% if conflitos.cpf or conflitos.mail %}
+  <label class="check"><input type="checkbox" name="confirmar_outra_pessoa" value="sim"> Confirmo que é outra pessoa</label>
+  {% endif %}
+  </section>
+  </div>
+  <button type="submit">Enviar convite</button>
+</form>
+{% endblock %}

@@ -1,0 +1,8 @@
+# Tema padrão (neutro). Cada deploy sobrescreve em /template/tema.toml.
+nome = "Plataforma"
+cor_primaria = "#04559f"
+cor_secundaria = "#1592e6"
+rodape = ""
+
+# Rótulo = URL, exibidos após definir a senha e no e-mail de conta aprovada.
+[links]

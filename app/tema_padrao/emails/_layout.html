@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>{{ assunto }}</title>
+<style>
+@media (max-width:620px){.cartao{padding:24px 20px !important}.botao a{display:block !important}}
+</style>
+</head>
+<body style="margin:0;padding:0;background:#f5f8fb">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f5f8fb">
+<tr><td align="center" style="padding:24px 12px">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px">
+    <tr><td style="background:{{ tema.cor_primaria }};padding:16px 24px;border-radius:8px 8px 0 0">
+      {% if tem_logo %}<img src="cid:logo" alt="{{ tema.nome }}" height="40" style="display:block;height:40px;width:auto;border:0">
+      {% else %}<span style="font-family:system-ui,'Segoe UI',Roboto,Arial,sans-serif;font-size:20px;font-weight:700;color:#ffffff">{{ tema.nome }}</span>{% endif %}
+    </td></tr>
+    <tr><td class="cartao" style="background:#ffffff;padding:32px;border-radius:0 0 8px 8px;font-family:system-ui,'Segoe UI',Roboto,Arial,sans-serif;font-size:16px;line-height:1.5;color:#1d2733">
+      {{ corpo_html }}
+      {% if botao %}
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:24px 0 8px">
+        <tr><td class="botao" align="center" bgcolor="{{ tema.cor_primaria }}" style="border-radius:6px">
+          <a href="{{ link }}" target="_blank" style="display:inline-block;padding:12px 24px;font-family:system-ui,'Segoe UI',Roboto,Arial,sans-serif;font-size:16px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:6px">{{ botao }}</a>
+        </td></tr>
+      </table>
+      <p style="margin:16px 0 0;font-size:13px;line-height:1.4;color:#6b7785">Se o botão não funcionar, copie este endereço no navegador:<br><span style="color:{{ tema.cor_primaria }};word-break:break-all">{{ link }}</span></p>
+      {% endif %}
+    </td></tr>
+    <tr><td style="padding:16px 24px;font-family:system-ui,'Segoe UI',Roboto,Arial,sans-serif;font-size:12px;line-height:1.5;color:#6b7785;text-align:center">
+      {% if tema.rodape %}{{ tema.rodape }}<br>{% endif %}{{ motivo_envio }}
+    </td></tr>
+  </table>
+</td></tr>
+</table>
+</body>
+</html>

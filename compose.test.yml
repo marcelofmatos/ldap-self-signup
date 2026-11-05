@@ -1,0 +1,29 @@
+name: ldap-self-signup-tests
+
+services:
+  openldap:
+    image: osixia/openldap:latest
+    environment:
+      LDAP_ORGANISATION: Teste
+      LDAP_DOMAIN: exemplo.org
+      LDAP_ADMIN_PASSWORD: admin-teste
+      LDAP_TLS: "false"
+
+  mailpit:
+    image: axllent/mailpit:v1.21.0
+
+  tests:
+    build:
+      context: .
+      target: dev
+    volumes:
+      - .:/srv
+    environment:
+      LDAP_TEST_URL: ldap://openldap:389
+      LDAP_TEST_ADMIN_DN: cn=admin,dc=exemplo,dc=org
+      LDAP_TEST_ADMIN_PW: admin-teste
+      MAILPIT_URL: http://mailpit:8025
+      MAILPIT_SMTP_HOST: mailpit
+    depends_on:
+      - openldap
+      - mailpit

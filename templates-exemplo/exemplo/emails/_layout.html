@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>{{ assunto }}</title>
+<style>
+/* Tema de exemplo — ajustes de celular; o resto é CSS inline */
+@media (max-width:620px){.cartao{padding:24px 20px !important}.botao a{display:block !important}}
+p{margin:0 0 16px}
+</style>
+</head>
+<body style="margin:0;padding:0;background:#f3f4f6">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f3f4f6">
+<tr><td align="center" style="padding:32px 12px">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px">
+    <tr><td class="cartao" style="background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;padding:32px 40px;font-family:system-ui,'Segoe UI',Roboto,Arial,sans-serif;font-size:16px;line-height:1.6;color:#1f2937">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px;border-bottom:1px solid #e5e7eb">
+        <tr><td align="left" style="padding:0 0 20px">
+          {% if tem_logo %}<img src="cid:logo" alt="{{ tema.nome }}" width="172" height="48" style="display:block;width:172px;height:48px;border:0">
+          {% else %}<span style="font-size:20px;font-weight:700;color:#1f2937">{{ tema.nome }}</span>{% endif %}
+        </td></tr>
+      </table>
+      <h1 style="margin:0 0 20px;font-size:22px;line-height:1.3;font-weight:600;color:#1f2937">{{ assunto }}</h1>
+      {{ corpo_html }}
+      {% if botao %}
+      <table role="presentation" align="center" cellpadding="0" cellspacing="0" border="0" style="margin:28px auto 8px">
+        <tr><td class="botao" align="center" bgcolor="{{ tema.cor_primaria }}" style="border-radius:8px">
+          <a href="{{ link }}" target="_blank" style="display:inline-block;padding:12px 28px;font-family:system-ui,'Segoe UI',Roboto,Arial,sans-serif;font-size:16px;font-weight:500;color:#ffffff;text-decoration:none;border-radius:8px">{{ botao }}</a>
+        </td></tr>
+      </table>
+      <p style="margin:20px 0 0;font-size:13px;line-height:1.5;color:#6b7280">Se o botão não funcionar, copie este endereço no navegador:<br><span style="color:{{ tema.cor_primaria }};word-break:break-all">{{ link }}</span></p>
+      {% endif %}
+    </td></tr>
+    <tr><td style="padding:20px 24px;font-family:system-ui,'Segoe UI',Roboto,Arial,sans-serif;font-size:12px;line-height:1.6;color:#6b7280;text-align:center">
+      {% if tema.rodape %}{{ tema.rodape }}<br>{% endif %}{{ motivo_envio }}<br>
+      <a href="https://www.exemplo.org/" target="_blank" style="color:#6b7280">www.exemplo.org</a>
+    </td></tr>
+  </table>
+</td></tr>
+</table>
+</body>
+</html>

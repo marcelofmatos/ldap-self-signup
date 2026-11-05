@@ -1,0 +1,5 @@
+{% extends "base.html" %}
+{% block conteudo %}
+<div class="aviso">{{ privacidade|safe }}</div>
+<p><a href="{{ url_for('publico.inicio') }}">Voltar</a></p>
+{% endblock %}

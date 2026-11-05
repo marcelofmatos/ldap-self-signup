@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block conteudo %}
+{% if email_fixo %}
+<h1>Preencha seus dados</h1>
+<p>Você foi convidado para ter uma conta. Preencha os dados abaixo para enviar a solicitação.</p>
+<p>E-mail: <strong>{{ email_fixo }}</strong></p>
+{% else %}
+<h1>Confira seus dados</h1>
+<p>Você foi convidado para ter uma conta. Confira os dados abaixo e corrija o que for preciso.</p>
+{% endif %}
+{% if erros.geral %}<p class="erro">{{ erros.geral }}</p>{% endif %}
+<form method="post">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  {% for campo, rotulo, tipo in [("nome", "Nome completo", "text"), ("cpf", "CPF", "text"),
+                                  ("email", "E-mail", "email"), ("telefone", "Telefone com DDD", "tel")]
+     if not (email_fixo and campo == "email") %}
+  <label for="{{ campo }}">{{ rotulo }}</label>
+  <input id="{{ campo }}" name="{{ campo }}" type="{{ tipo }}" value="{{ form.get(campo, '') }}" required>
+  {% if erros[campo] %}<p class="erro">{{ erros[campo] }}</p>{% endif %}
+  {% endfor %}
+  <label for="justificativa">Observações (opcional)</label>
+  <textarea id="justificativa" name="justificativa" rows="3">{{ form.get('justificativa', '') }}</textarea>
+  {% if erros.justificativa %}<p class="erro">{{ erros.justificativa }}</p>{% endif %}
+  <div class="aviso">{{ privacidade|safe }}</div>
+  <label class="check"><input type="checkbox" name="consentimento" value="sim">
+    Li o aviso de privacidade e concordo com o tratamento dos meus dados para a finalidade descrita.</label>
+  <button type="submit">{{ "Enviar solicitação" if email_fixo else "Confirmar" }}</button>
+</form>
+{% endblock %}

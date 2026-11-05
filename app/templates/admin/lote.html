@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block largura %}largo{% endblock %}
+{% block conteudo %}
+{% include "admin/_nav.html" %}
+<h1>Convidar em lote</h1>
+<p>Envie uma planilha <strong>.xlsx</strong> ou <strong>.csv</strong> (até 1 MB e 500 linhas) com as colunas
+  nome, CPF, e-mail e telefone (opcional). A primeira linha pode ser um cabeçalho com esses nomes; sem cabeçalho,
+  as colunas são lidas nessa ordem. Antes de enviar os convites você confere uma prévia.</p>
+{% if erro %}<p class="erro">{{ erro }}</p>{% endif %}
+<form method="post" action="{{ url_for('admin.lote_upload') }}" enctype="multipart/form-data">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <label for="planilha">Planilha</label>
+  <input id="planilha" name="planilha" type="file" accept=".xlsx,.csv" required>
+  <button type="submit">Ver prévia</button>
+</form>
+<p><a href="{{ url_for('admin.convidar') }}">Convidar uma pessoa</a></p>
+{% endblock %}
