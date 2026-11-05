@@ -153,6 +153,27 @@ def test_falha_de_smtp_nao_expira_solicitacao_anterior(amb):
     assert amb.banco.obter(anterior["id"])["status"] == "pendente"
 
 
+def test_cpf_alheio_com_outro_email_nao_encerra_o_pedido(amb):
+    _solicitar(amb)
+    amb.client.post(amb.correio.caminho_do_link())
+    [anterior] = amb.banco.buscar("", "pendente", 1)
+    _solicitar(amb, {**FORM, "email": "outra@exemplo.org"})
+    assert amb.banco.obter(anterior["id"])["status"] == "pendente"
+    amb.client.post(amb.correio.caminho_do_link())
+    assert amb.banco.obter(anterior["id"])["status"] == "pendente"
+
+
+def test_mesmo_cpf_e_email_encerra_o_anterior_so_depois_de_confirmar(amb):
+    _solicitar(amb)
+    amb.client.post(amb.correio.caminho_do_link())
+    [anterior] = amb.banco.buscar("", "pendente", 1)
+    _solicitar(amb)
+    assert amb.banco.obter(anterior["id"])["status"] == "pendente"
+    amb.client.post(amb.correio.caminho_do_link())
+    assert amb.banco.obter(anterior["id"])["status"] == "expirada"
+    assert len(amb.banco.buscar("", "pendente", 1)) == 1
+
+
 def test_get_do_link_de_confirmacao_nao_confirma(amb):
     _solicitar(amb)
     caminho = amb.correio.caminho_do_link()

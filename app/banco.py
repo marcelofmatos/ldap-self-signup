@@ -245,10 +245,11 @@ class Banco:
                     " email_confirmado_em) VALUES (?,?,?,?,?,?)",
                     (sid, versao_aviso, t, ip, user_agent, t if email_confirmado else None))
 
-    def expirar_anteriores(self, cpf: str, exceto_sid: int) -> None:
+    def expirar_anteriores(self, cpf: str, email: str, exceto_sid: int) -> None:
         with self._con() as con:
-            con.execute("UPDATE solicitacoes SET status='expirada' WHERE cpf=? AND id!=? "
-                        "AND origem!='alteracao' AND status IN ('aguardando_confirmacao','pendente')", (cpf, exceto_sid))
+            con.execute("UPDATE solicitacoes SET status='expirada' WHERE cpf=? AND email=? AND id!=? "
+                        "AND origem!='alteracao' AND status IN ('aguardando_confirmacao','pendente')",
+                        (cpf, email, exceto_sid))
 
     def remover_solicitacao(self, sid: int) -> None:
         with self._con() as con:

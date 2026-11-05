@@ -31,13 +31,15 @@ def test_criar_solicitacao_e_consentimento(banco):
     assert texto_aviso(banco, "v1hash") == "# Aviso"
 
 
-def test_nova_solicitacao_mesmo_cpf_expira_anterior(banco):
+def test_nova_solicitacao_mesmo_cpf_e_email_expira_anterior(banco):
     s1 = _criar(banco)
     s2 = _criar(banco)
+    outro = _criar(banco, {**DADOS, "email": "outro@exemplo.org"})
     assert banco.obter(s1)["status"] == "aguardando_confirmacao"
-    banco.expirar_anteriores(DADOS["cpf"], s2)
+    banco.expirar_anteriores(DADOS["cpf"], DADOS["email"], s2)
     assert banco.obter(s1)["status"] == "expirada"
     assert banco.obter(s2)["status"] == "aguardando_confirmacao"
+    assert banco.obter(outro)["status"] == "aguardando_confirmacao"
 
 
 def test_confirmar_email(banco):
@@ -414,7 +416,7 @@ def test_expirar_anteriores_nao_toca_alteracao(banco):
                 email_confirmado=False)
     alt = banco.criar_alteracao(dados, uid="mariasouza", organizacao="CLIENTE-A", consentimento=cons)
     outra = _criar(banco)
-    banco.expirar_anteriores("52998224725", outra + 1)
+    banco.expirar_anteriores("52998224725", DADOS["email"], outra + 1)
     assert banco.obter(alt)["status"] == "pendente"
     assert banco.obter(outra)["status"] == "expirada"
 

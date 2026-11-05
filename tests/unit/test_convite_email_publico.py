@@ -60,14 +60,19 @@ def test_preencher_envia_para_aprovacao(conv):
     assert "convite_preenchido" in [a["acao"] for a in auditoria(conv.banco)]
 
 
-def test_preencher_expira_pedido_anterior_do_mesmo_cpf(conv):
+def test_preencher_expira_so_pedido_anterior_do_mesmo_cpf_e_email(conv):
     antigo = conv.banco.criar_solicitacao(
+        {"nome": "Joana Pereira Lima", "cpf": "12345678909", "email": "joana@exemplo.org",
+         "telefone": "+5511987654321", "justificativa": "x"},
+        uid_sugerido="joanalima", ip="", user_agent="", versao_aviso="v", texto_aviso="t", agora=conv.relogio())
+    outro_email = conv.banco.criar_solicitacao(
         {"nome": "Joana Pereira Lima", "cpf": "12345678909", "email": "j2@exemplo.org",
          "telefone": "+5511987654321", "justificativa": "x"},
         uid_sugerido="joanalima", ip="", user_agent="", versao_aviso="v", texto_aviso="t", agora=conv.relogio())
     assert conv.banco.obter(antigo)["status"] == "aguardando_confirmacao"
     _preencher(conv)
     assert conv.banco.obter(antigo)["status"] == "expirada"
+    assert conv.banco.obter(outro_email)["status"] == "aguardando_confirmacao"
     assert conv.banco.obter(conv.sid)["status"] == "pendente"
 
 

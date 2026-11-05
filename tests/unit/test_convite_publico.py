@@ -218,13 +218,25 @@ def test_dois_aceites_simultaneos_sem_mudancas_criam_uma_conta_com_os_dados_de_q
     assert conv.dir.contas["joanalima"]["telefone"] == "+5511987654321"
 
 
-def test_aceite_com_mudancas_expira_solicitacoes_anteriores_do_cpf(conv):
-    from tests.unit.test_publico import _solicitar
-    _solicitar(conv)  # solicitação do formulário com o CPF 529.982.247-25
-    [antiga] = conv.banco.buscar("", "aguardando_confirmacao", 1)
+def test_aceite_com_mudancas_expira_so_anterior_do_mesmo_cpf_e_email(conv):
+    from tests.unit.test_publico import FORM, _solicitar
+    _solicitar(conv, {**FORM, "email": "joana@exemplo.org"})
+    _solicitar(conv, {**FORM, "email": "outra@exemplo.org"})
+    antigas = {s["email"]: s["id"] for s in conv.banco.buscar("", "aguardando_confirmacao", 1)}
     assert _aceitar(conv, cpf="529.982.247-25").status_code == 200
-    assert conv.banco.obter(antiga["id"])["status"] == "expirada"
+    assert conv.banco.obter(antigas["joana@exemplo.org"])["status"] == "expirada"
+    assert conv.banco.obter(antigas["outra@exemplo.org"])["status"] == "aguardando_confirmacao"
     assert conv.banco.obter(conv.sid)["status"] == "pendente"
+
+
+def test_aceite_com_email_novo_so_expira_anterior_depois_da_confirmacao(conv):
+    from tests.unit.test_publico import FORM, _solicitar
+    _solicitar(conv, {**FORM, "email": "novo@exemplo.org"})
+    [antiga] = conv.banco.buscar("", "aguardando_confirmacao", 1)
+    assert _aceitar(conv, cpf="529.982.247-25", email="novo@exemplo.org").status_code == 200
+    assert conv.banco.obter(antiga["id"])["status"] == "aguardando_confirmacao"
+    conv.client.post(conv.correio.caminho_do_link())
+    assert conv.banco.obter(antiga["id"])["status"] == "expirada"
 
 
 def test_aceite_com_email_novo_grava_o_consentimento_antes_de_enviar(conv, monkeypatch):

@@ -128,7 +128,6 @@ def confirmar():
                     link=s.link(f"/confirmar-email/{token}"), validade=s.cfg.token_ttl_hours):
         s.banco.remover_solicitacao(sid)
         return render_template("erro_envio.html"), 503
-    s.banco.expirar_anteriores(dados["cpf"], sid)
     s.banco.auditar("publico", "solicitacao_criada", f"sol:{sid}", "", agora)
     return render_template("enviado.html")
 
@@ -154,6 +153,8 @@ def confirmar_email(token):
     if not s.banco.confirmar_email(sid, agora):
         return render_template("link_invalido.html"), 410
     sol = s.banco.obter(sid)
+    if sol["origem"] != "alteracao":
+        s.banco.expirar_anteriores(sol["cpf"], sol["email"], sid)
     s.banco.auditar("publico", "email_confirmado", f"sol:{sid}", "", agora)
     s.enviar("nova_solicitacao", s.cfg.admin_notify_email, nome=sol["nome"], email=sol["email"],
              link=s.link(f"/admin/solicitacao/{sid}"),
@@ -398,7 +399,8 @@ def convite_aceitar(token):
             s.banco.devolver_convite(sol)
             return render_template("erro_envio.html"), 503
     tokens.consumir(s.banco, token, tokens.CONVITE, agora)
-    s.banco.expirar_anteriores(dados["cpf"], sid)
+    if status == "pendente":  # com e-mail novo, quem encerra o anterior é a confirmação do e-mail
+        s.banco.expirar_anteriores(dados["cpf"], dados["email"], sid)
     s.banco.auditar("convite", "convite_alterado", f"sol:{sid}",
                     f"campos: {', '.join(alterados)}; uid do convite: {sol['uid_sugerido']}", agora)
     if status == "aguardando_confirmacao":
@@ -426,7 +428,7 @@ def _preencher_convite_email(s, sol, token):
                                    confirmado_em=iso(agora), consentimento=consentimento):
         return render_template("link_invalido.html"), 410
     tokens.consumir(s.banco, token, tokens.CONVITE, agora)
-    s.banco.expirar_anteriores(dados["cpf"], sid)
+    s.banco.expirar_anteriores(dados["cpf"], dados["email"], sid)
     s.banco.auditar("convite", "convite_preenchido", f"sol:{sid}", "", agora)
     s.enviar("nova_solicitacao", s.cfg.admin_notify_email, nome=dados["nome"], email=dados["email"],
              link=s.link(f"/admin/solicitacao/{sid}"))
