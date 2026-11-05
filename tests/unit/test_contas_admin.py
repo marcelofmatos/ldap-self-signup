@@ -85,10 +85,10 @@ def test_contas_paginacao_preserva_busca_e_cliente(adm):
 def test_contas_mostra_sem_email_grupos_e_acao(adm):
     _conta(adm, "semmail", cn="Sem Mail", grupos=["Usuario"])
     _conta(adm, "muitos", cn="Muitos Grupos", mail="m@exemplo.org", ou="CLIENTE-A",
-           grupos=["Usuario", "wiki", "grafana", "sip", "rokia"])
+           grupos=["Usuario", "wiki", "grafana", "sip", "portal"])
     r = adm.client.get("/admin/contas")
     assert '<strong class="erro">sem e-mail</strong>' in r.text
-    assert '<td class="grupos" title="grafana, rokia, sip, Usuario, wiki"><span>grafana</span> <span class="mudo">+4</span></td>' in r.text
+    assert '<td class="grupos" title="grafana, portal, sip, Usuario, wiki"><span>grafana</span> <span class="mudo">+4</span></td>' in r.text
     assert 'action="/admin/contas/muitos/reset"' in r.text
     assert 'class="icone" title="Enviar link de redefinição" aria-label="Enviar link de redefinição"><svg' in r.text
     assert 'disabled class="icone" title="Sem e-mail: cadastre o e-mail antes" aria-label="Sem e-mail: cadastre o e-mail antes"' in r.text
