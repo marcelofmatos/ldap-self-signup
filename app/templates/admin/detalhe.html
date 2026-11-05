@@ -70,9 +70,11 @@
     {% for o in orgs %}<option{% if o == sol.organizacao %} selected{% endif %}>{{ o }}</option>{% endfor %}
     <option value="__nova__"{% if org_nova %} selected{% endif %}>Novo cliente…</option>
   </select>
-  <label for="organizacao_nova">Nome do novo cliente (só se escolheu "Novo cliente")</label>
-  <input id="organizacao_nova" name="organizacao_nova" value="{{ org_nova }}">
-  <label class="check"><input type="checkbox" name="confirmar_nova" value="sim"> Confirmo a criação do cliente novo</label>
+  <div class="cliente-novo">
+    <label for="organizacao_nova">Nome do novo cliente (só se escolheu "Novo cliente")</label>
+    <input id="organizacao_nova" name="organizacao_nova" value="{{ org_nova }}">
+    <label class="check"><input type="checkbox" name="confirmar_nova" value="sim"> Confirmo a criação do cliente novo</label>
+  </div>
   {% endif %}
   {% if conflitos.cpf or conflitos.mail %}
   <label class="check"><input type="checkbox" name="confirmar_outra_pessoa" value="sim"> Confirmo que é outra pessoa</label>
@@ -135,4 +137,5 @@ para pendente e aprove de novo.</p>
 </table>
 </div>
 {% else %}<p>Sem registros.</p>{% endif %}
+{% include "admin/_cliente_novo.html" %}
 {% endblock %}

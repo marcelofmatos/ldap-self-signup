@@ -32,9 +32,11 @@
     {% for o in orgs %}<option{% if o == form.organizacao %} selected{% endif %}>{{ o }}</option>{% endfor %}
     <option value="__nova__"{% if form.organizacao == '__nova__' %} selected{% endif %}>Novo cliente…</option>
   </select>
-  <label for="organizacao_nova">Nome do novo cliente (só se escolheu "Novo cliente")</label>
-  <input id="organizacao_nova" name="organizacao_nova" value="{{ form.organizacao_nova }}">
-  <label class="check"><input type="checkbox" name="confirmar_nova" value="sim"{% if form.confirmar_nova == 'sim' %} checked{% endif %}> Confirmo a criação do cliente novo</label>
+  <div class="cliente-novo">
+    <label for="organizacao_nova">Nome do novo cliente (só se escolheu "Novo cliente")</label>
+    <input id="organizacao_nova" name="organizacao_nova" value="{{ form.organizacao_nova }}">
+    <label class="check"><input type="checkbox" name="confirmar_nova" value="sim"{% if form.confirmar_nova == 'sim' %} checked{% endif %}> Confirmo a criação do cliente novo</label>
+  </div>
   {% if linhas is none %}
   <label for="emails">E-mails (um por linha, ou separados por vírgula, ponto e vírgula ou espaço)</label>
   <textarea id="emails" name="emails" rows="8" required>{{ form.emails }}</textarea>
@@ -60,4 +62,5 @@
   {% endif %}
 </form>
 {% endif %}
+{% include "admin/_cliente_novo.html" %}
 {% endblock %}

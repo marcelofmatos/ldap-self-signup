@@ -1,0 +1,19 @@
+<script>
+// Mostra o nome e a confirmação do cliente novo só quando o cliente escolhido é "Novo cliente…".
+// Escondidos, os campos ficam desabilitados e não são enviados. Sem JavaScript o bloco fica sempre visível.
+(function () {
+  var cliente = document.getElementById('organizacao');
+  var bloco = document.querySelector('.cliente-novo');
+  if (!cliente || !bloco) return;
+  function ajustar() {
+    var novo = cliente.value === '__nova__';
+    bloco.hidden = !novo;
+    bloco.querySelectorAll('input').forEach(function (campo) { campo.disabled = !novo; });
+    return novo;
+  }
+  cliente.addEventListener('change', function () {
+    if (ajustar()) document.getElementById('organizacao_nova').focus();
+  });
+  ajustar();
+})();
+</script>
