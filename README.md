@@ -293,6 +293,11 @@ itálico. Placeholders:
 - Uma solicitação presa em `aprovando` (processo interrompido no meio da aprovação) gera o aviso
   "N solicitações em aprovação — verificar" na lista. Depois de conferir no LDAP se a conta foi criada, o botão **Voltar para pendente**
   (`POST /admin/solicitacao/<id>/destravar`) a devolve a `pendente` e registra `destravar` na auditoria.
+- **Pedido novo e CPF repetido:** um pedido novo só encerra (`expirada`) um pedido anterior em aberto quando tem o
+  **mesmo CPF e o mesmo e-mail** e depois que o e-mail novo está comprovado: na confirmação do e-mail (cadastro
+  público e convite com e-mail alterado) ou na hora (convite aceito com o e-mail do convite e convite por e-mail
+  preenchido). Quem só conhece o CPF de alguém não consegue cancelar o pedido dessa pessoa; CPF igual com e-mail
+  diferente deixa os dois pedidos para o admin, que vê o conflito no detalhe.
 - Cliente (`ou`) desconhecido exige a confirmação "cliente novo". Conflito de uid bloqueia, conflito de CPF/e-mail exige confirmar "é outra pessoa".
 - Falha ao avisar a rejeição por e-mail é exibida no painel. Falha ao enviar o link após criar a conta deixa `link_enviado=false` e habilita "reenviar link".
 - `memberUid` antigo no grupo padrão é tolerado ao criar a conta.
@@ -370,6 +375,12 @@ página, ordenadas por usuário: usuário, nome, e-mail ("sem e-mail" em destaqu
   diferenciar maiúsculas e acentos.
 - **Filtro por cliente** em badges (`?cliente=`): Todos, cada cliente existente e "Sem cliente", com a contagem para a
   busca atual. A lista vem de uma busca paginada no LDAP por requisição; filtro e paginação são feitos na aplicação.
+- **Ficha da conta:** o ícone de olho ("Ver ficha da conta") abre `GET /admin/contas/<uid>`, lida do LDAP na hora:
+  usuário, nome, **CPF completo**, e-mail, telefone, cliente e grupos, com os botões de pedir confirmação dos dados e
+  enviar link de redefinição. Abaixo, as **solicitações ligadas à conta** (criadas por aprovação ou convite, e as
+  correções de dados dela, com link para o detalhe) e o **histórico** da auditoria da conta e dessas solicitações,
+  mais recente primeiro (até 300 linhas), com rótulos em português e as linhas de erro destacadas. Conta inexistente
+  dá 404.
 - **Reset individual:** "Enviar link de redefinição" na linha (`POST /admin/contas/<uid>/reset`), como antes.
 - **Reset em lote:** marque as contas (ou "Selecionar todas as N contas do filtro atual", que vale para todas as
   páginas) e clique em "Enviar link de redefinição às selecionadas". A tela de confirmação lista quem recebe o link e,

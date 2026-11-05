@@ -81,7 +81,7 @@ flowchart LR
 | `app/servicos.py` | Contêiner de serviços injetados (`Servicos`), acessor `svc()` e `ip_cliente()`. `Servicos.enviar` orquestra o envio (renderiza com `tema.email`, envia com `correio`) |
 | `app/web/publico.py` | Boas-vindas (`/`), formulário (`/cadastro`), revisão, confirmação de e-mail, `/privacidade`, aceite de convite, confirmação e correção dos dados (helper `registrar_alteracao`), definir senha (com login automático), esqueci minha senha |
 | `app/web/conta.py` | Área do usuário: `/entrar`, `/sair`, `/minha-conta`, `/minha-conta/corrigir`, `/minha-conta/senha` (sessão `usuario`) |
-| `app/web/admin.py` | Login, lista/detalhe de solicitações, aprovar/rejeitar/reenviar/destravar, convidar (um a um, por e-mail e em lote)/reenviar/cancelar convite, lista de contas (busca, filtro por cliente) e reset de senha e confirmação dos dados, individuais e em lote |
+| `app/web/admin.py` | Login, lista/detalhe de solicitações, aprovar/rejeitar/reenviar/destravar, convidar (um a um, por e-mail e em lote)/reenviar/cancelar convite, lista de contas (busca, filtro por cliente), ficha da conta (`/admin/contas/<uid>`: dados do LDAP, solicitações e histórico com `ROTULOS_ACAO`) e reset de senha e confirmação dos dados, individuais e em lote |
 | `app/wsgi.py` | Ponto de entrada do gunicorn: `create_app(carregar_config())` |
 
 Como o template é lido na partida, mudanças em `/template` exigem reiniciar o container.
@@ -131,7 +131,11 @@ sequenceDiagram
 ```
 
 Se o SMTP falhar no envio do e-mail de confirmação, a solicitação é removida e a pessoa vê "tente mais tarde".
-Uma nova solicitação para o mesmo CPF substitui a anterior, que vira `expirada` só depois do envio bem-sucedido.
+Uma nova solicitação substitui a anterior em aberto (`aguardando_confirmacao`/`pendente`, que vira `expirada`) só se tiver o
+**mesmo CPF e o mesmo e-mail** e **depois de comprovado o e-mail**, isto é, em `POST /confirmar-email/<token>` e não ao enviar o
+formulário (`banco.expirar_anteriores(cpf, email, exceto_sid)`). Assim, quem só sabe o CPF de alguém não cancela o pedido
+dessa pessoa. CPF igual com e-mail diferente mantém os dois para o admin. No convite, a regra vale na hora quando o e-mail
+é o do convite (ou no convite por e-mail preenchido) e na confirmação do e-mail quando ele foi alterado.
 
 ## 3. Fluxo: aprovação (admin)
 
@@ -402,6 +406,14 @@ Rotas públicas: `GET/POST /confirmar-dados/<token>` e `GET/POST /confirmar-dado
 `POST /admin/contas/<uid>/confirmacao`, `POST /admin/contas/confirmacao-lote/confirmar` (tela de confirmação) e
 `POST /admin/contas/confirmacao-lote` (envio).
 
+### Ficha da conta (v0.9)
+
+`GET /admin/contas/<uid>` (aberta pelo ícone de olho na lista de contas) lê a conta do LDAP na hora (`obter_conta` e
+`grupos_de`): dados com **CPF completo**, grupos e os mesmos botões de confirmação dos dados e de reset. Mostra as
+solicitações ligadas (`uid_final = uid`, ou `origem = alteracao` com `uid_sugerido = uid`) e o histórico da auditoria
+(`alvo = uid` ou `sol:<id>` dessas solicitações, até 300 linhas) com rótulos em português (`ROTULOS_ACAO`) e as linhas de
+erro (`ACOES_ERRO`) destacadas. Conta inexistente: 404 (LDAP fora: 503).
+
 ## 4c. Área do usuário e esqueci minha senha (v0.7)
 
 `/entrar` valida usuário e senha por bind no LDAP e grava `session["usuario"]`, sem `session.clear()`. `/minha-conta`
@@ -468,7 +480,7 @@ sequenceDiagram
 ## 5. Estados da solicitação
 
 `aguardando_confirmacao` (e-mail ainda não confirmado) → `pendente` → `aprovando` (reivindicada, transitório) →
-`aprovada`, ou `rejeitada`. `expirada` quando a confirmação vence ou uma solicitação mais nova do mesmo CPF a substitui (a alteração de dados não
+`aprovada`, ou `rejeitada`. `expirada` quando a confirmação vence ou uma solicitação mais nova do **mesmo CPF e e-mail**, já com o e-mail comprovado, a substitui (a alteração de dados não
 expira nem é expirada por cadastro novo: só uma nova alteração da mesma conta a expira). A alteração nasce `pendente`, ou `aguardando_confirmacao` quando corrige o e-mail (o admin só é avisado após a confirmação; o prazo conta do consentimento e vale `expirar_aguardando`).
 `aprovando` volta a `pendente` quando o LDAP falha na aprovação ou quando o admin usa **Voltar para pendente**.
 Convites nascem `convidado`: o aceite sem mudanças passa por `aprovando` até `aprovada` (falha no LDAP volta a
@@ -488,8 +500,8 @@ stateDiagram-v2
   convidado --> expirada: cancelar ou novo convite do CPF
   aprovando --> convidado: falha no LDAP no aceite
   aguardando_confirmacao --> pendente: e-mail confirmado
-  aguardando_confirmacao --> expirada: confirmação vencida ou nova solicitação do CPF
-  pendente --> expirada: nova solicitação do mesmo CPF, exceto alteração
+  aguardando_confirmacao --> expirada: confirmação vencida ou nova solicitação do mesmo CPF e e-mail
+  pendente --> expirada: nova solicitação do mesmo CPF e e-mail, exceto alteração
   pendente --> expirada: nova alteração da mesma conta
   pendente --> aprovando: aprovar - reivindicação atômica
   pendente --> rejeitada: rejeitar - atômico
