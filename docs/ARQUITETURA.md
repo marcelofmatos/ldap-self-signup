@@ -79,9 +79,9 @@ flowchart LR
 | `app/ratelimit.py` | Limite de requisições por IP, em memória |
 | `app/diretorio.py` | Acesso ao LDAP via `ldap3`: buscas (uid/CPF/mail/ou), lista de contas com grupos (busca paginada), próximo uidNumber, criar conta, trocar senha, bind de login |
 | `app/servicos.py` | Contêiner de serviços injetados (`Servicos`), acessor `svc()` e `ip_cliente()`. `Servicos.enviar` orquestra o envio (renderiza com `tema.email`, envia com `correio`) |
-| `app/web/publico.py` | Boas-vindas (`/`), formulário (`/cadastro`), revisão, confirmação de e-mail, `/privacidade`, aceite de convite, confirmação e correção dos dados (helper `registrar_alteracao`), definir senha (com login automático), esqueci minha senha |
+| `app/web/publico.py` | Boas-vindas (`/`), formulário (`/cadastro`), revisão, confirmação de e-mail, confirmação do e-mail informado pelo admin (`/confirmar-email-conta/<token>`), `/privacidade`, aceite de convite, confirmação e correção dos dados (helper `registrar_alteracao`), definir senha (com login automático), esqueci minha senha |
 | `app/web/conta.py` | Área do usuário: `/entrar`, `/sair`, `/minha-conta`, `/minha-conta/corrigir`, `/minha-conta/senha` (sessão `usuario`) |
-| `app/web/admin.py` | Login, lista/detalhe de solicitações, aprovar/rejeitar/reenviar/destravar, convidar (um a um, por e-mail e em lote)/reenviar/cancelar convite, lista de contas (busca, filtro por cliente), ficha da conta (`/admin/contas/<uid>`: dados do LDAP, solicitações e histórico com `ROTULOS_ACAO`) e reset de senha e confirmação dos dados, individuais e em lote |
+| `app/web/admin.py` | Login, lista/detalhe de solicitações, aprovar/rejeitar/reenviar/destravar, convidar (um a um, por e-mail e em lote)/reenviar/cancelar convite, lista de contas (busca, filtro por cliente), ficha da conta (`/admin/contas/<uid>`: dados do LDAP, solicitações e histórico com `ROTULOS_ACAO`) e reset de senha, confirmação dos dados (individuais e em lote) e informar o e-mail da conta (`POST /admin/contas/<uid>/email`) |
 | `app/wsgi.py` | Ponto de entrada do gunicorn: `create_app(carregar_config())` |
 
 Como o template é lido na partida, mudanças em `/template` exigem reiniciar o container.
@@ -413,6 +413,30 @@ Rotas públicas: `GET/POST /confirmar-dados/<token>` e `GET/POST /confirmar-dado
 solicitações ligadas (`uid_final = uid`, ou `origem = alteracao` com `uid_sugerido = uid`) e o histórico da auditoria
 (`alvo = uid` ou `sol:<id>` dessas solicitações, até 300 linhas) com rótulos em português (`ROTULOS_ACAO`) e as linhas de
 erro (`ACOES_ERRO`) destacadas. Conta inexistente: 404 (LDAP fora: 503).
+
+### E-mail informado pelo admin (v0.10)
+
+Na ficha, `POST /admin/contas/<uid>/email` valida o e-mail, recusa o igual ao atual e o usado por outra conta (409), grava
+o pendente (`email_pendente`, um por conta), emite o token `definir_email` (invalida o anterior) e envia
+`confirmar_email_conta` ao endereço novo (auditoria `email_solicitado`). O LDAP só muda em
+`POST /confirmar-email-conta/<token>`, que grava o `mail`, apaga o pendente, audita `email_definido` e redireciona para
+`/definir-senha/<token>`. Falha de envio remove o pendente e audita `falha_envio_email`.
+
+```mermaid
+sequenceDiagram
+  participant A as Admin
+  participant S as App
+  participant P as Pessoa
+  participant L as LDAP
+  A->>S: POST /admin/contas/uid/email
+  S->>L: contas_por_email, outra conta recusa com 409
+  S->>S: grava pendente e token definir_email
+  S->>P: e-mail confirmar_email_conta com link
+  P->>S: POST /confirmar-email-conta/token
+  S->>L: grava o mail da conta
+  S->>S: apaga pendente, audita email_definido
+  S->>P: redireciona para definir a senha
+```
 
 ## 4c. Área do usuário e esqueci minha senha (v0.7)
 

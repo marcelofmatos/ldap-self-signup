@@ -382,6 +382,14 @@ página, ordenadas por usuário: usuário, nome, e-mail ("sem e-mail" em destaqu
   correções de dados dela, com link para o detalhe) e o **histórico** da auditoria da conta e dessas solicitações,
   mais recente primeiro (até 300 linhas), com rótulos em português e as linhas de erro destacadas. Conta inexistente
   dá 404.
+- **Informar o e-mail de uma conta:** na ficha, seção **E-mail** (`#email`), o admin digita o e-mail e envia
+  (`POST /admin/contas/<uid>/email`); serve para conta "sem e-mail" e também para corrigir um e-mail existente. Na
+  lista, "sem e-mail" é um link para essa seção. O e-mail **só é gravado no LDAP depois que a pessoa confirma** pelo
+  link `/confirmar-email-conta/<token>` (e-mail `confirmar_email_conta`, enviado ao endereço novo, validade
+  `TOKEN_TTL_HOURS`): ao confirmar, o `mail` é gravado e a pessoa segue direto para definir a senha. Até lá a ficha
+  mostra "Aguardando confirmação". E-mail já usado por outra conta é recusado (409). Um segundo pedido substitui o
+  pendente e invalida o link anterior. Falha de envio não altera nada e fica no histórico (`falha_envio_email`); o
+  histórico registra também `email_solicitado` e `email_definido`.
 - **Reset individual:** "Enviar link de redefinição" na linha (`POST /admin/contas/<uid>/reset`), como antes.
 - **Reset em lote:** marque as contas (ou "Selecionar todas as N contas do filtro atual", que vale para todas as
   páginas) e clique em "Enviar link de redefinição às selecionadas". A tela de confirmação lista quem recebe o link e,
