@@ -14,7 +14,8 @@ bp = Blueprint("admin", __name__, url_prefix="/admin")
 log = logging.getLogger("ldap-self-signup")
 SEM_CONFLITOS = {"uid": [], "cpf": [], "mail": []}
 LOTE_TTL = timedelta(hours=1)  # validade da prévia do convite em lote
-ACOES_ERRO = {"erro_ldap", "aprovacao_bloqueada", "falha_envio_link", "falha_envio_aviso", "falha_envio_convite"}
+ACOES_ERRO = {"erro_ldap", "aprovacao_bloqueada", "falha_envio_link", "falha_envio_aviso", "falha_envio_convite",
+               "falha_envio_email"}
 ROTULOS_ACAO = {
     "login": "Entrou no painel",
     "login_usuario": "Entrou na área do usuário",
@@ -44,6 +45,9 @@ ROTULOS_ACAO = {
     "lote_enviado": "Convites em lote enviados",
     "reset_lote": "Reset de senha em lote",
     "confirmacao_lote": "Confirmação de dados em lote",
+    "email_solicitado": "Pediu confirmação de e-mail",
+    "email_definido": "Confirmou o e-mail",
+    "falha_envio_email": "Falha ao enviar a confirmação de e-mail",
 }
 
 
@@ -356,6 +360,15 @@ def contas_busca():
                            sem_cliente=SEM_CLIENTE)
 
 
+def _ficha(s, dados: dict, grupos: list, status: int = 200):
+    uid = dados["uid"]
+    solicitacoes = s.banco.solicitacoes_da_conta(uid)
+    historico = s.banco.historico_da_conta(uid, [x["id"] for x in solicitacoes])
+    return render_template("admin/conta.html", conta=dados, grupos=grupos, solicitacoes=solicitacoes,
+                           historico=historico, acoes_erro=ACOES_ERRO, rotulos=STATUS,
+                           pendente=s.banco.email_pendente(uid)), status
+
+
 @bp.get("/contas/<uid>")
 @requer_admin
 def conta(uid):
@@ -367,10 +380,46 @@ def conta(uid):
         return _ldap_fora(e)
     if dados is None:
         abort(404)
-    solicitacoes = s.banco.solicitacoes_da_conta(uid)
-    historico = s.banco.historico_da_conta(uid, [x["id"] for x in solicitacoes])
-    return render_template("admin/conta.html", conta=dados, grupos=grupos, solicitacoes=solicitacoes,
-                           historico=historico, acoes_erro=ACOES_ERRO, rotulos=STATUS)
+    return _ficha(s, dados, grupos)
+
+
+@bp.post("/contas/<uid>/email")
+@requer_admin
+def email_da_conta(uid):
+    s = svc()
+    ficha = redirect(url_for("admin.conta", uid=uid) + "#email")
+    try:
+        dados = s.diretorio.obter_conta(uid)
+        if dados is None:
+            abort(404)
+        try:
+            email = contas.validar_email(request.form.get("email", ""))
+        except contas.DadosInvalidos as e:
+            flash(str(e))
+            return ficha
+        if email == (dados["mail"] or "").lower():
+            flash("É o e-mail atual.")
+            return ficha
+        outras = [c["uid"] for c in s.diretorio.contas_por_email(email) if c["uid"] != uid]
+        if outras:
+            flash(f"Este e-mail já é usado pela conta {outras[0]}.")
+            return _ficha(s, dados, s.diretorio.grupos_de(uid), 409)
+    except ErroDiretorio as e:
+        return _ldap_fora(e)
+    agora = s.agora()
+    s.banco.gravar_email_pendente(uid, email, session["admin"], agora)
+    token = tokens.emitir(s.banco, tokens.DEFINIR_EMAIL, uid, s.cfg.token_ttl_hours, agora)
+    enviado = s.enviar("confirmar_email_conta", email, nome=dados["cn"], uid=uid,
+                       link=s.link(f"/confirmar-email-conta/{token}"), validade=s.cfg.token_ttl_hours)
+    if enviado:
+        s.banco.auditar(session["admin"], "email_solicitado", uid, email, agora)
+        flash(f"Link de confirmação enviado para {contas.mascarar_email(email)}.")
+    else:
+        s.banco.remover_email_pendente(uid)
+        s.banco.invalidar_tokens(tokens.DEFINIR_EMAIL, uid, agora)
+        s.banco.auditar(session["admin"], "falha_envio_email", uid, email, agora)
+        flash("Falha ao enviar o e-mail. Tente de novo.")
+    return ficha
 
 
 def _enviar_reset(s, conta: dict, admin: str) -> bool:

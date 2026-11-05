@@ -14,6 +14,16 @@
   <dt>Grupos</dt><dd>{{ grupos|join(', ') or '—' }}</dd>
 </dl>
 
+<h2 id="email">E-mail</h2>
+<p>{% if conta.mail %}{{ conta.mail }}{% else %}<strong class="erro">sem e-mail</strong>{% endif %}</p>
+{% if pendente %}<p>Aguardando confirmação de <strong>{{ pendente.email }}</strong> (pedido por {{ pendente.pedido_por }} em {{ pendente.criado_em|data }}).</p>{% endif %}
+<form method="post" action="{{ url_for('admin.email_da_conta', uid=conta.uid) }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <label for="email-novo">{% if conta.mail %}Corrigir e-mail{% else %}Informar e-mail{% endif %}</label>
+  <input type="email" id="email-novo" name="email" required maxlength="254">
+  <button type="submit">Enviar link de confirmação</button>
+</form>
+
 <div class="colunas">
 <form method="post" action="{{ url_for('admin.confirmacao', uid=conta.uid) }}">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

@@ -188,3 +188,20 @@ def test_trocar_senha_pela_home(ldap, cliente):
     assert r.status_code == 302 and r.headers["Location"].endswith("/minha-conta")
     assert _bind_ok(ldap.url, "antigo", "Trocada#2026")
     assert not _bind_ok(ldap.url, "antigo", "Antiga#123")
+
+
+def test_admin_informa_email_confirma_e_define_senha(ldap, cliente):
+    cliente.post("/admin/login", data={"uid": "chefe", "senha": "Chefe#123"})
+    r = cliente.post("/admin/contas/comum/email", data={"email": "comum@exemplo.org"})
+    assert r.status_code == 302
+    ldap.con.search(USERS, "(uid=comum)", attributes=["mail"])
+    assert not ldap.con.entries[0].mail.values  # só vale depois de confirmar
+    link = _ultimo_link_para("comum@exemplo.org")
+    assert link.startswith("/confirmar-email-conta/")
+    r = cliente.post(link)
+    assert r.status_code == 302 and r.headers["Location"].startswith("/definir-senha/")
+    ldap.con.search(USERS, "(uid=comum)", attributes=["mail"])
+    assert str(ldap.con.entries[0].mail) == "comum@exemplo.org"
+    r = cliente.post(r.headers["Location"], data={"senha": "Comum#2026x", "confirmacao": "Comum#2026x"})
+    assert r.status_code == 302
+    assert _bind_ok(ldap.url, "comum", "Comum#2026x")
