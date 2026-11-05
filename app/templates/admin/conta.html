@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block largura %}largo{% endblock %}
+{% block conteudo %}
+{% include "admin/_nav.html" %}
+<h1>Conta <span class="id-badge">{{ conta.uid }}</span></h1>
+<p><a href="{{ url_for('admin.contas_busca') }}">← Voltar para contas</a></p>
+<dl class="dados">
+  <dt>Usuário</dt><dd>{{ conta.uid }}</dd>
+  <dt>Nome</dt><dd>{{ conta.cn or '—' }}</dd>
+  <dt>CPF</dt><dd>{{ conta.cpf|cpf or '—' }}</dd>
+  <dt>E-mail</dt><dd>{% if conta.mail %}{{ conta.mail }}{% else %}<strong class="erro">sem e-mail</strong>{% endif %}</dd>
+  <dt>Telefone</dt><dd>{{ conta.telefone|telefone or '—' }}</dd>
+  <dt>Cliente</dt><dd>{{ conta.ou or '—' }}</dd>
+  <dt>Grupos</dt><dd>{{ grupos|join(', ') or '—' }}</dd>
+</dl>
+
+<div class="colunas">
+<form method="post" action="{{ url_for('admin.confirmacao', uid=conta.uid) }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <button type="submit" {% if not conta.mail %}disabled title="Sem e-mail: cadastre o e-mail antes" {% endif %}>Pedir confirmação dos dados</button>
+</form>
+<form method="post" action="{{ url_for('admin.reset', uid=conta.uid) }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <button type="submit" {% if not conta.mail %}disabled title="Sem e-mail: cadastre o e-mail antes" {% endif %}>Enviar link de redefinição</button>
+</form>
+</div>
+
+<h2>Solicitações</h2>
+{% if solicitacoes %}
+<div class="tabela">
+<table class="lista">
+  <thead><tr><th>#</th><th>Origem</th><th>Status</th><th>Recebida em</th></tr></thead>
+  <tbody>
+  {% for x in solicitacoes %}
+  <tr>
+    <td><a href="{{ url_for('admin.detalhe', sid=x.id) }}">#{{ x.id }}</a></td>
+    <td>{% if x.origem == 'convite' %}Convite{% elif x.origem == 'convite_email' %}Convite por e-mail{% elif x.origem == 'alteracao' %}Alteração de dados{% else %}Formulário{% endif %}</td>
+    <td><span class="pill st-{{ x.status }}">{{ rotulos.get(x.status, x.status) }}</span></td>
+    <td>{{ x.criado_em|data }}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}<p>Nenhuma solicitação ligada a esta conta.</p>{% endif %}
+
+<h2>Histórico</h2>
+{% if historico %}
+<div class="tabela">
+<table class="lista">
+  <thead><tr><th>Quando</th><th>Quem</th><th>Ação</th><th>Detalhe</th></tr></thead>
+  <tbody>
+  {% for h in historico %}
+  <tr{% if h.acao in acoes_erro %} class="erro"{% endif %}>
+    <td>{{ h.quando|data }}</td><td>{{ h.ator }}</td><td>{{ h.acao|acao }}</td><td class="quebra">{{ h.detalhe }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}<p>Sem registros.</p>{% endif %}
+{% endblock %}

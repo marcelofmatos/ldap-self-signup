@@ -397,6 +397,21 @@ class Banco:
                 "AND detalhe IN ('esqueci_senha', 'esqueci_senha · falha_envio') LIMIT 1",
                 (uid, iso(desde))).fetchone() is not None
 
+    def solicitacoes_da_conta(self, uid: str) -> list[dict]:
+        with self._con() as con:
+            rows = con.execute("SELECT * FROM solicitacoes WHERE uid_final=? OR (origem='alteracao' AND uid_sugerido=?) "
+                               "ORDER BY id DESC", (uid, uid)).fetchall()
+        return [dict(r) for r in rows]
+
+    def historico_da_conta(self, uid: str, sids: list[int], limite: int = 300) -> list[dict]:
+        """Auditoria da conta e das solicitações ligadas a ela, mais recente primeiro."""
+        alvos = [uid] + [f"sol:{s}" for s in sids]
+        marcas = ",".join("?" * len(alvos))
+        with self._con() as con:
+            rows = con.execute(f"SELECT * FROM auditoria WHERE alvo IN ({marcas}) ORDER BY id DESC LIMIT ?",
+                               (*alvos, limite)).fetchall()
+        return [dict(r) for r in rows]
+
     def historico(self, sid: int) -> list[dict]:
         with self._con() as con:
             rows = con.execute("SELECT * FROM auditoria WHERE alvo=? ORDER BY id", (f"sol:{sid}",)).fetchall()

@@ -15,6 +15,34 @@ log = logging.getLogger("ldap-self-signup")
 SEM_CONFLITOS = {"uid": [], "cpf": [], "mail": []}
 LOTE_TTL = timedelta(hours=1)  # validade da prévia do convite em lote
 ACOES_ERRO = {"erro_ldap", "aprovacao_bloqueada", "falha_envio_link", "falha_envio_aviso", "falha_envio_convite"}
+ROTULOS_ACAO = {
+    "login": "Entrou no painel",
+    "login_usuario": "Entrou na área do usuário",
+    "solicitacao_criada": "Solicitação criada",
+    "email_confirmado": "Confirmou o e-mail",
+    "aprovar": "Aprovou",
+    "rejeitar": "Rejeitou",
+    "destravar": "Voltou a solicitação para pendente",
+    "aprovacao_bloqueada": "Aprovação bloqueada",
+    "erro_ldap": "Erro no LDAP",
+    "link_enviado": "Enviou link de definir senha",
+    "falha_envio_link": "Falha ao enviar o link de definir senha",
+    "falha_envio_aviso": "Falha ao enviar o aviso",
+    "falha_envio_convite": "Falha ao enviar o convite",
+    "reset_senha": "Link de redefinição",
+    "senha_definida": "Definiu a senha",
+    "senha_alterada": "Trocou a senha",
+    "alteracao_solicitada": "Pediu correção dos dados",
+    "confirmacao_dados": "Pedido de confirmação dos dados",
+    "dados_confirmados": "Confirmou os dados",
+    "convite_criado": "Convite criado",
+    "convite_enviado": "Convite enviado",
+    "convite_aceito": "Convite aceito",
+    "convite_alterado": "Convite aceito com alterações",
+    "convite_preenchido": "Convite por e-mail preenchido",
+    "convite_cancelado": "Convite cancelado",
+    "lote_enviado": "Convites em lote enviados",
+}
 
 
 def requer_admin(f):
@@ -324,6 +352,23 @@ def contas_busca():
     return render_template("admin/contas.html", q=q, cliente=cliente, contas=filtradas[inicio:inicio + POR_PAGINA],
                            total=total, pagina=pagina, paginas=paginas, clientes=clientes, contagens=contagens,
                            sem_cliente=SEM_CLIENTE)
+
+
+@bp.get("/contas/<uid>")
+@requer_admin
+def conta(uid):
+    s = svc()
+    try:
+        dados = s.diretorio.obter_conta(uid)
+        grupos = s.diretorio.grupos_de(uid) if dados else []
+    except ErroDiretorio as e:
+        return _ldap_fora(e)
+    if dados is None:
+        abort(404)
+    solicitacoes = s.banco.solicitacoes_da_conta(uid)
+    historico = s.banco.historico_da_conta(uid, [x["id"] for x in solicitacoes])
+    return render_template("admin/conta.html", conta=dados, grupos=grupos, solicitacoes=solicitacoes,
+                           historico=historico, acoes_erro=ACOES_ERRO, rotulos=STATUS)
 
 
 def _enviar_reset(s, conta: dict, admin: str) -> bool:
