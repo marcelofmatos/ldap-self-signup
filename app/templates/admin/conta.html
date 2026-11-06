@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block largura %}largo{% endblock %}
+{% from "admin/_icones_acoes.html" import icone_chave, icone_confirmar %}
 {% block abas %}{% include "admin/_nav.html" %}{% endblock %}
 {% block conteudo %}
 <h1>Conta <span class="id-badge">{{ conta.uid }}</span></h1>
@@ -9,7 +10,7 @@
   <dt>Senha</dt><dd><form method="post" action="{{ url_for('admin.reset', uid=conta.uid) }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <input type="hidden" name="voltar" value="ficha">
-    <button type="submit" class="pequeno" {% if not conta.mail %}disabled title="Sem e-mail: cadastre o e-mail antes" {% endif %}>Enviar link de redefinição</button>
+    <button type="submit" class="pequeno com-icone" {% if not conta.mail %}disabled title="Sem e-mail: cadastre o e-mail antes" {% endif %}>{{ icone_chave() }}Enviar link de redefinição</button>
   </form></dd>
   <dt>Nome</dt><dd>{{ conta.cn or '—' }}</dd>
   <dt>CPF</dt><dd>{{ conta.cpf|cpf or '—' }}</dd>
@@ -26,7 +27,7 @@
 
 <form method="post" action="{{ url_for('admin.confirmacao', uid=conta.uid) }}">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-  <button type="submit" {% if not conta.mail %}disabled title="Sem e-mail: cadastre o e-mail antes" {% endif %}>Pedir confirmação dos dados</button>
+  <button type="submit" class="com-icone" {% if not conta.mail %}disabled title="Sem e-mail: cadastre o e-mail antes" {% endif %}>{{ icone_confirmar() }}Pedir confirmação dos dados</button>
 </form>
 
 <h2>Solicitações</h2>

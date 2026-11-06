@@ -131,7 +131,7 @@ def test_senha_logo_apos_usuario_com_botao_pequeno_de_redefinicao(amb):
     dados = html.split('<dl class="dados">', 1)[1].split("</dl>", 1)[0]
     assert dados.index("<dt>Usuário</dt>") < dados.index("<dt>Senha</dt>") < dados.index("<dt>Nome</dt>")
     senha = dados.split("<dt>Senha</dt>", 1)[1].split("</dd>", 1)[0]
-    assert 'action="/admin/contas/ana/reset"' in senha and 'class="pequeno"' in senha
+    assert 'action="/admin/contas/ana/reset"' in senha and 'class="pequeno com-icone"' in senha
     assert ">Enviar link de redefinição</button>" in senha
     assert html.count('action="/admin/contas/ana/reset"') == 1  # o botão grande saiu
 
@@ -143,3 +143,22 @@ def test_redefinicao_pela_ficha_volta_para_a_ficha(amb):
     assert r.status_code == 302 and r.headers["Location"].endswith("/admin/contas/ana")
     r = amb.client.post("/admin/contas/ana/reset", data={"voltar": "https://fora.exemplo.org"})
     assert "/admin/contas?q=ana" in r.headers["Location"]  # valor desconhecido: comportamento antigo
+
+
+def _svg_do_botao(html, trecho):
+    """SVG do primeiro botão cujo HTML contém `trecho`."""
+    botao = html.split(trecho, 1)[1].split("</button>", 1)[0]
+    return botao[botao.index("<svg"):botao.index("</svg>") + 6]
+
+
+def test_ficha_usa_os_mesmos_icones_das_acoes_da_lista(amb):
+    _conta(amb)
+    _login(amb)
+    lista = amb.client.get("/admin/contas").get_data(as_text=True)
+    chave = _svg_do_botao(lista, 'title="Enviar link de redefinição"')
+    confirmar = _svg_do_botao(lista, 'title="Pedir confirmação dos dados"')
+    ficha = amb.client.get("/admin/contas/ana").get_data(as_text=True)
+    senha = ficha.split("<dt>Senha</dt>", 1)[1].split("</dd>", 1)[0]
+    assert chave in senha and ">Enviar link de redefinição" in senha
+    acao = ficha.split('action="/admin/contas/ana/confirmacao"', 1)[1].split("</form>", 1)[0]
+    assert confirmar in acao and "Pedir confirmação dos dados" in acao
