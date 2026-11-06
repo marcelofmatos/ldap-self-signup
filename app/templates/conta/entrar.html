@@ -8,6 +8,8 @@
   <label for="senha">Senha</label><input id="senha" name="senha" type="password" autocomplete="current-password" required>
   <button type="submit">Entrar</button>
 </form>
-<p class="mudo"><a href="{{ url_for('publico.esqueci_senha_form') }}">Esqueci minha senha</a></p>
-<p class="mudo">Ainda não tem conta? <a href="{{ url_for('publico.formulario') }}">Solicite acesso</a>.</p>
+<p class="badges">
+  <a class="badge" href="{{ url_for('publico.esqueci_senha_form') }}">Esqueci minha senha</a>
+  <a class="badge" href="{{ url_for('publico.formulario') }}">Solicitar acesso</a>
+</p>
 {% endblock %}

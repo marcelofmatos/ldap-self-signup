@@ -364,3 +364,17 @@ def test_sair_fica_no_topo_ao_lado_do_titulo(amb):
     assert "<h1>Minha conta</h1>" in topo and 'action="/sair"' in topo and ">Sair</button>" in topo
     assert html.count('action="/sair"') == 1  # um só botão de sair, antes dos dados
     assert html.index('action="/sair"') < html.index('<dl class="dados">')
+
+
+def test_entrar_tem_atalhos_em_badge(amb):
+    html = amb.client.get("/entrar").text
+    atalhos = html.split('<p class="badges">', 1)[1].split("</p>", 1)[0]
+    assert '<a class="badge" href="/esqueci-senha">Esqueci minha senha</a>' in atalhos
+    assert '<a class="badge" href="/cadastro">Solicitar acesso</a>' in atalhos
+
+
+def test_inicio_logado_tem_badge_para_minha_conta(amb):
+    _conta(amb)
+    _entrar(amb)
+    atalhos = amb.client.get("/").text.split('<p class="badges">', 1)[1].split("</p>", 1)[0]
+    assert '<a class="badge" href="/minha-conta">Ir para minha conta</a>' in atalhos

@@ -4,9 +4,12 @@
 <p>Aqui você solicita sua conta de acesso aos serviços da plataforma. Preencha o cadastro: a equipe revisa a
   solicitação e, se aprovada, você recebe por e-mail o link para definir sua senha.</p>
 <p><a class="botao" href="{{ url_for('publico.formulario') }}">Solicitar acesso</a></p>
+<p class="badges">
 {% if logado %}
-<p class="mudo"><a href="{{ url_for('conta.home') }}">Ir para minha conta</a></p>
+  <a class="badge" href="{{ url_for('conta.home') }}">Ir para minha conta</a>
 {% else %}
-<p class="mudo">Já tem conta? <a href="{{ url_for('conta.entrar') }}">Entrar</a>. <a href="{{ url_for('publico.esqueci_senha_form') }}">Esqueci minha senha</a></p>
+  <a class="badge" href="{{ url_for('conta.entrar') }}">Entrar</a>
+  <a class="badge" href="{{ url_for('publico.esqueci_senha_form') }}">Esqueci minha senha</a>
 {% endif %}
+</p>
 {% endblock %}

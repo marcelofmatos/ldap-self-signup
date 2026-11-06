@@ -225,3 +225,9 @@ def test_inicio_tem_boas_vindas_e_botao_para_cadastro(amb):
 def test_cadastro_em_nova_url(amb):
     assert 'name="cpf"' in amb.client.get("/cadastro").text
     assert amb.client.post("/").status_code == 405
+
+
+def test_inicio_tem_atalhos_em_badge(amb):
+    atalhos = amb.client.get("/").text.split('<p class="badges">', 1)[1].split("</p>", 1)[0]
+    assert '<a class="badge" href="/entrar">Entrar</a>' in atalhos
+    assert '<a class="badge" href="/esqueci-senha">Esqueci minha senha</a>' in atalhos
