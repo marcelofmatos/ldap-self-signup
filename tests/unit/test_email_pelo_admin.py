@@ -66,25 +66,23 @@ def test_email_de_outra_conta_409(adm):
 
 def test_email_invalido_nao_grava(adm):
     r = _pedir(adm, "isso-nao-e-email")
-    assert r.status_code == 302
+    assert r.status_code == 400 and "E-mail inválido." in r.text and 'name="email"' in r.text
     assert adm.banco.email_pendente("ana") is None and adm.correio.enviados == []
 
 
 def test_igual_ao_atual_sem_efeito(adm):
     adm.dir.contas["ana"]["mail"] = NOVO
     r = _pedir(adm)
-    assert r.status_code == 302
+    assert r.status_code == 400 and "É o e-mail atual." in r.text
     assert adm.banco.email_pendente("ana") is None and adm.correio.enviados == []
-    assert "É o e-mail atual." in adm.client.get(r.headers["Location"]).text
 
 
 def test_falha_smtp_desfaz_e_audita(adm):
     adm.correio.falhar = True
     r = _pedir(adm)
-    assert r.status_code == 302
+    assert r.status_code == 503 and "Falha ao enviar" in r.text
     assert adm.banco.email_pendente("ana") is None
     assert auditoria(adm.banco)[0]["acao"] == "falha_envio_email"
-    assert "Falha ao enviar" in adm.client.get(r.headers["Location"]).text
 
 
 def test_conta_inexistente_404(adm):
@@ -96,18 +94,38 @@ def test_ldap_fora_503(adm):
     assert _pedir(adm).status_code == 503
 
 
-def test_ficha_mostra_form_e_pendente(adm):
+def test_ficha_tem_botao_para_tela_de_email_e_mostra_pendente(adm):
     html = adm.client.get("/admin/contas/ana").text
     assert 'id="email"' in html and "sem e-mail" in html
-    assert 'action="/admin/contas/ana/email"' in html
+    assert '<a class="botao" href="/admin/contas/ana/email">Informar e-mail</a>' in html
+    assert 'name="email"' not in html  # o formulário fica só na tela exclusiva
     _pedir(adm)
     html = adm.client.get("/admin/contas/ana").text
     assert "Aguardando confirmação de" in html and NOVO in html and "chefe" in html
 
 
-def test_lista_linka_sem_email_para_a_ficha(adm):
+def test_lista_linka_sem_email_para_a_tela_de_email(adm):
     html = adm.client.get("/admin/contas").text
-    assert '<a href="/admin/contas/ana#email"' in html
+    assert '<a href="/admin/contas/ana/email"' in html
+
+
+def test_tela_de_email(adm):
+    html = adm.client.get("/admin/contas/ana/email").text
+    assert 'action="/admin/contas/ana/email"' in html and 'name="email"' in html and "sem e-mail" in html
+    assert 'href="/admin/contas/ana"' in html  # voltar para a ficha
+    adm.dir.contas["ana"]["mail"] = "ana@exemplo.org"
+    html = adm.client.get("/admin/contas/ana/email").text
+    assert "ana@exemplo.org" in html and "Alterar e-mail" in html
+    assert '<a class="botao" href="/admin/contas/ana/email">Alterar e-mail</a>' in adm.client.get("/admin/contas/ana").text
+
+
+def test_tela_de_email_mostra_pendente_404_e_login(adm):
+    _pedir(adm)
+    assert "Aguardando confirmação de" in adm.client.get("/admin/contas/ana/email").text
+    assert adm.client.get("/admin/contas/zzz/email").status_code == 404
+    adm.client.post("/admin/sair")
+    r = adm.client.get("/admin/contas/ana/email")
+    assert r.status_code == 302 and "/admin/login" in r.headers["Location"]
 
 
 def test_rotulos_no_historico(adm):

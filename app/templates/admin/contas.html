@@ -56,7 +56,7 @@
     <td><input type="checkbox" name="uid" value="{{ c.uid }}" form="lote" aria-label="Selecionar {{ c.uid }}"></td>
     <td>{{ c.uid }}</td>
     <td>{{ c.cn }}</td>
-    <td>{% if c.mail %}{{ c.mail }}{% else %}<a href="{{ url_for('admin.conta', uid=c.uid) }}#email"><strong class="erro">sem e-mail</strong></a>{% endif %}</td>
+    <td>{% if c.mail %}{{ c.mail }}{% else %}<a href="{{ url_for('admin.email_da_conta', uid=c.uid) }}"><strong class="erro">sem e-mail</strong></a>{% endif %}</td>
     <td>{{ c.ou or '—' }}</td>
     {% if c.grupos %}<td class="grupos" title="{{ c.grupos|join(', ') }}"><span>{{ c.grupos[0] }}</span>{% if c.grupos|length > 1 %} <span class="mudo">+{{ c.grupos|length - 1 }}</span>{% endif %}</td>
     {%- else %}<td class="grupos">—</td>{% endif %}

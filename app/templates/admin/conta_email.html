@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block conteudo %}
+{% include "admin/_nav.html" %}
+<h1>{% if conta.mail %}Alterar e-mail{% else %}Informar e-mail{% endif %} <span class="id-badge">{{ conta.uid }}</span></h1>
+<p><a href="{{ url_for('admin.conta', uid=conta.uid) }}">← Voltar para a ficha da conta</a></p>
+<dl class="dados">
+  <dt>Conta</dt><dd>{{ conta.cn or conta.uid }}</dd>
+  <dt>E-mail atual</dt><dd>{% if conta.mail %}{{ conta.mail }}{% else %}<strong class="erro">sem e-mail</strong>{% endif %}</dd>
+</dl>
+{% if pendente %}<p class="aviso">Aguardando confirmação de <strong>{{ pendente.email }}</strong> (pedido por {{ pendente.pedido_por }} em {{ pendente.criado_em|data }}). Um novo pedido substitui este.</p>{% endif %}
+<p>O endereço informado recebe um link de confirmação. O e-mail só passa a valer na conta depois que a pessoa
+  confirmar; em seguida ela é levada a definir a senha.</p>
+<form method="post" action="{{ url_for('admin.email_da_conta', uid=conta.uid) }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <label for="email">Novo e-mail</label>
+  <input type="email" id="email" name="email" value="{{ valor }}" required maxlength="254" autofocus>
+  {% if erro %}<p class="erro" role="alert">{{ erro }}</p>{% endif %}
+  <button type="submit">Enviar link de confirmação</button>
+</form>
+{% endblock %}

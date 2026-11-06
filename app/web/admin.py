@@ -360,16 +360,21 @@ def contas_busca():
                            sem_cliente=SEM_CLIENTE)
 
 
+def _pendente_valido(s, uid: str) -> dict | None:
+    """E-mail aguardando confirmação da conta, se o link ainda vale (token e pendente nascem no mesmo instante)."""
+    pendente = s.banco.email_pendente(uid)
+    if pendente and pendente["criado_em"] <= iso(s.agora() - timedelta(hours=s.cfg.token_ttl_hours)):
+        return None
+    return pendente
+
+
 def _ficha(s, dados: dict, grupos: list, status: int = 200):
     uid = dados["uid"]
     solicitacoes = s.banco.solicitacoes_da_conta(uid)
     historico = s.banco.historico_da_conta(uid, [x["id"] for x in solicitacoes])
-    pendente = s.banco.email_pendente(uid)
-    if pendente and pendente["criado_em"] <= iso(s.agora() - timedelta(hours=s.cfg.token_ttl_hours)):
-        pendente = None  # o link já expirou
     return render_template("admin/conta.html", conta=dados, grupos=grupos, solicitacoes=solicitacoes,
                            historico=historico, acoes_erro=ACOES_ERRO, rotulos=STATUS,
-                           pendente=pendente), status
+                           pendente=_pendente_valido(s, uid)), status
 
 
 @bp.get("/contas/<uid>")
@@ -386,27 +391,31 @@ def conta(uid):
     return _ficha(s, dados, grupos)
 
 
-@bp.post("/contas/<uid>/email")
+def _tela_email(s, dados: dict, erro: str | None = None, status: int = 200, valor: str = ""):
+    return render_template("admin/conta_email.html", conta=dados, pendente=_pendente_valido(s, dados["uid"]),
+                           erro=erro, valor=valor), status
+
+
+@bp.route("/contas/<uid>/email", methods=["GET", "POST"])
 @requer_admin
 def email_da_conta(uid):
     s = svc()
-    ficha = redirect(url_for("admin.conta", uid=uid) + "#email")
     try:
         dados = s.diretorio.obter_conta(uid)
         if dados is None:
             abort(404)
+        if request.method == "GET":
+            return _tela_email(s, dados)
+        bruto = request.form.get("email", "")
         try:
-            email = contas.validar_email(request.form.get("email", ""))
+            email = contas.validar_email(bruto)
         except contas.DadosInvalidos as e:
-            flash(str(e))
-            return ficha
+            return _tela_email(s, dados, str(e), 400, bruto)
         if email == (dados["mail"] or "").lower():
-            flash("É o e-mail atual.")
-            return ficha
+            return _tela_email(s, dados, "É o e-mail atual.", 400, bruto)
         outras = [c["uid"] for c in s.diretorio.contas_por_email(email) if c["uid"] != uid]
         if outras:
-            flash(f"Este e-mail já é usado pela conta {outras[0]}.")
-            return _ficha(s, dados, s.diretorio.grupos_de(uid), 409)
+            return _tela_email(s, dados, f"Este e-mail já é usado pela conta {outras[0]}.", 409, bruto)
     except ErroDiretorio as e:
         return _ldap_fora(e)
     agora = s.agora()
@@ -414,15 +423,14 @@ def email_da_conta(uid):
     token = tokens.emitir(s.banco, tokens.DEFINIR_EMAIL, uid, s.cfg.token_ttl_hours, agora)
     enviado = s.enviar("confirmar_email_conta", email, nome=dados["cn"], uid=uid,
                        link=s.link(f"/confirmar-email-conta/{token}"), validade=s.cfg.token_ttl_hours)
-    if enviado:
-        s.banco.auditar(session["admin"], "email_solicitado", uid, email, agora)
-        flash(f"Link de confirmação enviado para {contas.mascarar_email(email)}.")
-    else:
+    if not enviado:
         s.banco.remover_email_pendente(uid)
         s.banco.invalidar_tokens(tokens.DEFINIR_EMAIL, uid, agora)
         s.banco.auditar(session["admin"], "falha_envio_email", uid, email, agora)
-        flash("Falha ao enviar o e-mail. Tente de novo.")
-    return ficha
+        return _tela_email(s, dados, "Falha ao enviar o e-mail. Tente de novo.", 503, bruto)
+    s.banco.auditar(session["admin"], "email_solicitado", uid, email, agora)
+    flash(f"Link de confirmação enviado para {contas.mascarar_email(email)}.")
+    return redirect(url_for("admin.conta", uid=uid) + "#email")
 
 
 def _enviar_reset(s, conta: dict, admin: str) -> bool:

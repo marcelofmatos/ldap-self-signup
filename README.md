@@ -382,9 +382,9 @@ página, ordenadas por usuário: usuário, nome, e-mail ("sem e-mail" em destaqu
   correções de dados dela, com link para o detalhe) e o **histórico** da auditoria da conta e dessas solicitações,
   mais recente primeiro (até 300 linhas), com rótulos em português e as linhas de erro destacadas. Conta inexistente
   dá 404.
-- **Informar o e-mail de uma conta:** na ficha, seção **E-mail** (`#email`), o admin digita o e-mail e envia
-  (`POST /admin/contas/<uid>/email`); serve para conta "sem e-mail" e também para corrigir um e-mail existente. Na
-  lista, "sem e-mail" é um link para essa seção. O e-mail **só é gravado no LDAP depois que a pessoa confirma** pelo
+- **Informar o e-mail de uma conta:** na ficha, a seção **E-mail** mostra o atual e o botão "Informar e-mail" /
+  "Alterar e-mail", que abre a tela exclusiva `/admin/contas/<uid>/email` (formulário; erros na própria tela); serve
+  para conta "sem e-mail" e também para corrigir um e-mail existente. Na lista, "sem e-mail" leva direto a essa tela. O e-mail **só é gravado no LDAP depois que a pessoa confirma** pelo
   link `/confirmar-email-conta/<token>` (e-mail `confirmar_email_conta`, enviado ao endereço novo, validade
   `TOKEN_TTL_HOURS`): ao confirmar, o `mail` é gravado e a pessoa segue direto para definir a senha. Até lá a ficha
   mostra "Aguardando confirmação". E-mail já usado por outra conta é recusado (409). Um segundo pedido substitui o
