@@ -66,7 +66,7 @@ def test_contas_filtro_por_cliente_com_contagens(adm):
     for rotulo, n in [("Todos", 4), ("CLIENTE-A", 2), ("CLIENTE-B", 1), ("Sem cliente", 1)]:
         assert f'{rotulo} <span class="contagem">{n}</span>' in r.text, rotulo
     assert 'href="/admin/contas?q=lima" aria-current="page"' in r.text
-    assert r.text.count('aria-current="page"') == 1
+    assert r.text.split('</nav>', 1)[1].count('aria-current="page"') == 1  # fora das abas do painel
     r = adm.client.get("/admin/contas?q=lima&cliente=CLIENTE-A&pagina=1")
     assert _uids_na_lista(r.text) == ["ana", "bia"]
     assert 'href="/admin/contas?q=lima&amp;cliente=CLIENTE-A" aria-current="page"' in r.text

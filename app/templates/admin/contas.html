@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block largura %}largo{% endblock %}
+{% block abas %}{% include "admin/_nav.html" %}{% endblock %}
 {% macro barra() %}
 <div class="barra">
   <span>{{ total }} {{ 'conta' if total == 1 else 'contas' }}</span>
@@ -20,7 +21,6 @@
    {%- if valor == cliente %} aria-current="page"{% endif %}>{{ rotulo }} <span class="contagem">{{ contagens.get(valor, 0) }}</span></a>
 {% endmacro %}
 {% block conteudo %}
-{% include "admin/_nav.html" %}
 <h1>Contas</h1>
 <form method="get" action="{{ url_for('admin.contas_busca') }}" class="busca" role="search">
   {% if cliente %}<input type="hidden" name="cliente" value="{{ cliente }}">{% endif %}

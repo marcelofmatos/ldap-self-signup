@@ -81,6 +81,7 @@ dl.dados dd{margin:0;overflow-wrap:anywhere}
 <header>{% if tema_logo %}<img src="{{ url_for('logo') }}" alt="">{% endif %}<strong>{{ tema.nome }}</strong></header>
 <main class="{% block largura %}estreito{% endblock %}">
 {% for mensagem in get_flashed_messages() %}<div class="flash">{{ mensagem }}</div>{% endfor %}
+{% block abas %}{% endblock %}
 <div class="card">{% block conteudo %}{% endblock %}</div>
 </main>
 <footer>{{ tema.rodape }}</footer>

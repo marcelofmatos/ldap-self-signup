@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block largura %}largo{% endblock %}
+{% block abas %}{% include "admin/_nav.html" %}{% endblock %}
 {% block conteudo %}
-{% include "admin/_nav.html" %}
 <h1>Convidar</h1>
 <p>A pessoa recebe por e-mail um link para conferir os dados e aceitar; a conta é criada no aceite.</p>
 <p class="badges"><a class="badge" href="{{ url_for('admin.lote_upload') }}">Convidar em lote (planilha .xlsx ou .csv)</a></p>

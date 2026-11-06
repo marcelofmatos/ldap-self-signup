@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block largura %}largo{% endblock %}
+{% block abas %}{% include "admin/_nav.html" %}{% endblock %}
 {% block conteudo %}
-{% include "admin/_nav.html" %}
 <h1>Convidar por e-mail</h1>
 <p>A pessoa recebe um link, preenche nome, CPF e telefone, e a solicitação vai para aprovação.</p>
 {% if erro %}<p class="erro">{{ erro }}</p>{% endif %}

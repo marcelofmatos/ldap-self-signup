@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block largura %}largo{% endblock %}
+{% block abas %}{% include "admin/_nav.html" %}{% endblock %}
 {% block conteudo %}
-{% include "admin/_nav.html" %}
 <h1>{{ acao.titulo }}</h1>
 <p>Enviados: {{ contagem.enviados }} · Falhas de envio: {{ contagem.falhas }} (tente de novo) ·
   Pulados: {{ contagem.sem_email + contagem.nao_encontradas }} (sem e-mail: {{ contagem.sem_email }},

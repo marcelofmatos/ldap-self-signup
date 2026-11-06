@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block largura %}largo{% endblock %}
+{% block abas %}{% include "admin/_nav.html" %}{% endblock %}
 {% macro barra() %}
 <div class="barra">
   <span>{{ total }} {{ 'resultado' if total == 1 else 'resultados' }}</span>
@@ -13,7 +14,6 @@
 </div>
 {% endmacro %}
 {% block conteudo %}
-{% include "admin/_nav.html" %}
 <h1>Solicitações</h1>
 {% set presas = contagens.get('aprovando', 0) %}
 {% if presas and status not in ('aprovando', 'todos') %}

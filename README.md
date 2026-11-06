@@ -227,6 +227,10 @@ Um `paginas/base.html` próprio deve ter `{% include "_componentes.html" %}` log
 arquivo traz o CSS dos componentes do app (botões com ícone, checkbox, cards). Sem ele, os componentes que entrarem
 em versões novas aparecem sem estilo no tema.
 
+O mesmo `base.html` precisa também de `{% block abas %}{% endblock %}` **logo antes** de `<div class="card">`: é onde
+entram as abas do painel admin (Solicitações, Contas, Convidar, Convidar por e-mail e Sair), por fora do cartão.
+Sem esse bloco o menu do painel não aparece.
+
 `privacidade.md` é obrigatório: o serviço não sobe sem ele. Trocar o arquivo gera uma nova versão do aviso nos
 consentimentos. O template é lido na partida: **qualquer mudança no template exige reiniciar o container**. Exemplo pronto, sem logo nem favicon (o cabeçalho mostra o nome do tema), em [`templates-exemplo/exemplo/`](templates-exemplo/exemplo/).
 

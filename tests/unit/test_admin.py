@@ -422,7 +422,7 @@ def test_lista_badges_de_status(amb):
                       ("Expirada", 0), ("Aguardando confirmação", 0)]:
         assert f"{rotulo} <span class=\"contagem\">{n}</span>" in r.text, rotulo
     assert 'href="/admin/?q=exemplo&amp;status=aprovada" aria-current="page"' in r.text
-    assert r.text.count('aria-current="page"') == 1
+    assert r.text.split('</nav>', 1)[1].count('aria-current="page"') == 1  # fora das abas do painel
     assert 'href="/admin/?q=exemplo&amp;status=pendente"' in r.text
     r = amb.client.get("/admin/?q=p1@")
     assert "Todos <span class=\"contagem\">1</span>" in r.text

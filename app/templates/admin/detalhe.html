@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block largura %}largo{% endblock %}
+{% block abas %}{% include "admin/_nav.html" %}{% endblock %}
 {% block conteudo %}
-{% include "admin/_nav.html" %}
 <h1>Solicitação <span class="id-badge">#{{ sol.id }}</span> <span class="pill st-{{ sol.status }}">{{ rotulos.get(sol.status, sol.status) }}</span></h1>
 {% if erro %}<p class="erro">{{ erro }}</p>{% endif %}
 <dl class="dados">

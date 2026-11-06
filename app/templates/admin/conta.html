@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block largura %}largo{% endblock %}
+{% block abas %}{% include "admin/_nav.html" %}{% endblock %}
 {% block conteudo %}
-{% include "admin/_nav.html" %}
 <h1>Conta <span class="id-badge">{{ conta.uid }}</span></h1>
 <p class="badges"><a class="badge" href="{{ url_for('admin.contas_busca') }}">Voltar para contas</a></p>
 <dl class="dados">

@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block largura %}largo{% endblock %}
+{% block abas %}{% include "admin/_nav.html" %}{% endblock %}
 {% macro tabela(lista) %}
 <div class="tabela">
 <table class="lista">
@@ -13,7 +14,6 @@
 </div>
 {% endmacro %}
 {% block conteudo %}
-{% include "admin/_nav.html" %}
 <h1>{{ acao.titulo }}</h1>
 {% if erro %}
 <p class="erro">{{ erro }}</p>

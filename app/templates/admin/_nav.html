@@ -1,8 +1,18 @@
-<nav>
-  <a href="{{ url_for('admin.lista') }}">Solicitações</a>
-  <a href="{{ url_for('admin.contas_busca') }}">Contas</a>
-  <a href="{{ url_for('admin.convidar') }}">Convidar</a>
-  <a href="{{ url_for('admin.convidar_por_email') }}">Convidar por e-mail</a>
+{#- Abas do painel, fora do cartão (bloco `abas` do base.html). A aba da seção atual vem de request.endpoint. -#}
+{%- set ep = (request.endpoint or '').removeprefix('admin.') -%}
+{%- if ep.startswith('convidar_por_email') -%}{% set ativa = 'email' %}
+{%- elif ep in ('convidar', 'lote_upload', 'lote_previa') -%}{% set ativa = 'convidar' %}
+{%- elif ep in ('contas_busca', 'conta', 'email_da_conta', 'reset', 'confirmacao', 'reset_lote', 'reset_lote_confirmar',
+                'confirmacao_lote', 'confirmacao_lote_confirmar') -%}{% set ativa = 'contas' %}
+{%- else -%}{% set ativa = 'solicitacoes' %}{%- endif %}
+{%- macro aba(chave, endpoint, rotulo) -%}
+<a class="aba" href="{{ url_for(endpoint) }}"{% if chave == ativa %} aria-current="page"{% endif %}>{{ rotulo }}</a>
+{%- endmacro %}
+<nav class="abas" aria-label="Painel">
+  {{ aba('solicitacoes', 'admin.lista', 'Solicitações') }}
+  {{ aba('contas', 'admin.contas_busca', 'Contas') }}
+  {{ aba('convidar', 'admin.convidar', 'Convidar') }}
+  {{ aba('email', 'admin.convidar_por_email', 'Convidar por e-mail') }}
   <form method="post" action="{{ url_for('admin.sair') }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <button type="submit">Sair ({{ session.admin }})</button>
