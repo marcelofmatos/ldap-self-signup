@@ -1,6 +1,12 @@
 {% extends "base.html" %}
 {% block conteudo %}
-<h1>Minha conta</h1>
+<div class="topo-conta">
+  <h1>Minha conta</h1>
+  <form method="post" action="{{ url_for('conta.sair') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit">Sair</button>
+  </form>
+</div>
 {% set vazio = 'não informado' %}
 <dl class="dados">
   <dt>Usuário</dt><dd>{{ conta.uid }}</dd>
@@ -26,8 +32,4 @@
   <a class="servico" href="{{ s.url }}">{{ icone(s.icone) }}<span class="titulo">{{ s.rotulo }}</span>{% if s.descricao %}<span class="descricao">{{ s.descricao }}</span>{% endif %}</a>
 {% endfor %}</div>
 {% endif %}
-<form method="post" action="{{ url_for('conta.sair') }}">
-  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-  <button type="submit">Sair</button>
-</form>
 {% endblock %}

@@ -354,3 +354,13 @@ def test_todos_os_icones_renderizam_svg(amb):
     tpl = amb.app.jinja_env.from_string('{% from "_icones.html" import icone %}{{ icone(n) }}')
     for n in ICONES:
         assert "<svg" in tpl.render(n=n), n
+
+
+def test_sair_fica_no_topo_ao_lado_do_titulo(amb):
+    _conta(amb)
+    _entrar(amb)
+    html = amb.client.get("/minha-conta").text
+    topo = html.split('<div class="topo-conta">', 1)[1].split("</div>", 1)[0]
+    assert "<h1>Minha conta</h1>" in topo and 'action="/sair"' in topo and ">Sair</button>" in topo
+    assert html.count('action="/sair"') == 1  # um só botão de sair, antes dos dados
+    assert html.index('action="/sair"') < html.index('<dl class="dados">')
