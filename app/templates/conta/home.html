@@ -29,7 +29,7 @@
 {% from "_icones.html" import icone %}
 <h2>Serviços</h2>
 <div class="servicos">{% for s in servicos %}
-  <a class="servico" href="{{ s.url }}">{{ icone(s.icone) }}<span class="titulo">{{ s.rotulo }}</span>{% if s.descricao %}<span class="descricao">{{ s.descricao }}</span>{% endif %}</a>
+  <a class="servico" href="{{ s.url }}" target="_blank" rel="noopener noreferrer">{{ icone(s.icone) }}<span class="titulo">{{ s.rotulo }}</span>{% if s.descricao %}<span class="descricao">{{ s.descricao }}</span>{% endif %}</a>
 {% endfor %}</div>
 {% endif %}
 {% endblock %}

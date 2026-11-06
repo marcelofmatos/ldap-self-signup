@@ -20,5 +20,5 @@
   {% if erro %}<p class="erro">{{ erro }}</p>{% endif %}
   <button type="submit"{% if not completa %} disabled{% endif %}>Meus dados estão corretos</button>
 </form>
-{% if completa %}<p><a href="{{ url_for('publico.corrigir_dados_form', token=token) }}">Preciso corrigir</a></p>{% endif %}
+{% if completa %}<p class="badges"><a class="badge" href="{{ url_for('publico.corrigir_dados_form', token=token) }}">Preciso corrigir</a></p>{% endif %}
 {% endblock %}

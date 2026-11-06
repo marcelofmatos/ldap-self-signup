@@ -40,8 +40,8 @@ def test_home_mostra_servicos_como_cards(amb):
         {"rotulo": "Wiki", "url": "https://w.x", "icone": "wiki", "descricao": "Documentação interna"}]
     _entrar(amb)
     html = amb.client.get("/minha-conta").text
-    assert '<a class="servico" href="https://arq.x">' in html and "Arquivos" in html
-    assert '<a class="servico" href="https://w.x">' in html and "Documentação interna" in html
+    assert '<a class="servico" href="https://arq.x" target="_blank" rel="noopener noreferrer">' in html and "Arquivos" in html
+    assert '<a class="servico" href="https://w.x" target="_blank" rel="noopener noreferrer">' in html and "Documentação interna" in html
     assert html.count("<svg") >= 2
 
 

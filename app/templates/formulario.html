@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block conteudo %}
 <h1>Solicitar acesso</h1>
-<p class="mudo">Já tem conta? <a href="{{ url_for('conta.entrar') }}">Entrar</a>.</p>
+<p class="badges"><a class="badge" href="{{ url_for('conta.entrar') }}">Já tem conta? Entrar</a></p>
 {% if erros.geral %}<p class="erro">{{ erros.geral }}</p>{% endif %}
 <form method="post" action="{{ url_for('publico.revisar') }}">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

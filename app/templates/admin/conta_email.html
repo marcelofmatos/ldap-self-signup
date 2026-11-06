@@ -2,7 +2,7 @@
 {% block conteudo %}
 {% include "admin/_nav.html" %}
 <h1>{% if conta.mail %}Alterar e-mail{% else %}Informar e-mail{% endif %} <span class="id-badge">{{ conta.uid }}</span></h1>
-<p><a href="{{ url_for('admin.conta', uid=conta.uid) }}">← Voltar para a ficha da conta</a></p>
+<p class="badges"><a class="badge" href="{{ url_for('admin.conta', uid=conta.uid) }}">Voltar para a ficha da conta</a></p>
 <dl class="dados">
   <dt>Conta</dt><dd>{{ conta.cn or conta.uid }}</dd>
   <dt>E-mail atual</dt><dd>{% if conta.mail %}{{ conta.mail }}{% else %}<strong class="erro">sem e-mail</strong>{% endif %}</dd>

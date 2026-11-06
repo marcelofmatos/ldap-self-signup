@@ -3,7 +3,7 @@
 {% block conteudo %}
 {% include "admin/_nav.html" %}
 <h1>Conta <span class="id-badge">{{ conta.uid }}</span></h1>
-<p><a href="{{ url_for('admin.contas_busca') }}">← Voltar para contas</a></p>
+<p class="badges"><a class="badge" href="{{ url_for('admin.contas_busca') }}">Voltar para contas</a></p>
 <dl class="dados">
   <dt>Usuário</dt><dd>{{ conta.uid }}</dd>
   <dt>Nome</dt><dd>{{ conta.cn or '—' }}</dd>

@@ -43,5 +43,5 @@
   <button type="submit" {% if not n %}disabled{% endif %}>Confirmar envio ({{ n }})</button>
 </form>
 {% endif %}
-<p><a href="{{ url_for('admin.contas_busca') }}">Voltar para a lista de contas</a></p>
+<p class="badges"><a class="badge" href="{{ url_for('admin.contas_busca') }}">Voltar para a lista de contas</a></p>
 {% endblock %}

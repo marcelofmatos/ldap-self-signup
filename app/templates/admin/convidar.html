@@ -4,7 +4,7 @@
 {% include "admin/_nav.html" %}
 <h1>Convidar</h1>
 <p>A pessoa recebe por e-mail um link para conferir os dados e aceitar; a conta é criada no aceite.</p>
-<p><a href="{{ url_for('admin.lote_upload') }}">Convidar em lote (planilha .xlsx ou .csv)</a></p>
+<p class="badges"><a class="badge" href="{{ url_for('admin.lote_upload') }}">Convidar em lote (planilha .xlsx ou .csv)</a></p>
 {% if erros.geral %}<p class="erro">{{ erros.geral }}</p>{% endif %}
 {% if conflitos.uid or conflitos.cpf or conflitos.mail %}
 <div class="aviso">Já existe no LDAP:
