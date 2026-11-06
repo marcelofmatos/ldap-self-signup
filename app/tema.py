@@ -91,9 +91,11 @@ class Tema:
         return dados
 
     def servicos_do_cliente(self, ou: str | None) -> list:
-        """Cards gerais mais os do cliente (ou desconhecido/vazio: só os gerais)."""
+        """Cards gerais mais os do cliente; o do cliente de mesmo rótulo substitui o geral, na posição dele."""
         _, extras = self.por_cliente.get(_sem_acento(ou or "").strip(), ({}, []))
-        return self.dados["servicos"] + extras
+        do_cliente = {s["rotulo"]: s for s in extras}
+        gerais = [do_cliente.pop(s["rotulo"], s) for s in self.dados["servicos"]]
+        return gerais + list(do_cliente.values())
 
     def links_do_cliente(self, ou: str | None) -> dict:
         urls, _ = self.por_cliente.get(_sem_acento(ou or "").strip(), ({}, []))

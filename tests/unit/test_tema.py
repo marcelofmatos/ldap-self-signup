@@ -312,3 +312,11 @@ def test_cliente_desconhecido_ou_vazio_so_gerais(dir_template, ou):
 def test_links_por_cliente_invalidos_erro_tema(dir_template, toml):
     with pytest.raises(ErroTema):
         _tema_clientes(dir_template, toml)
+
+
+def test_card_do_cliente_substitui_o_geral_de_mesmo_rotulo(dir_template):
+    t = _tema_clientes(dir_template, '[links]\n"Chat" = "https://chat.x"\n"Wiki" = "https://w.x"\n'
+                                     '[links_por_cliente.CLIENTE-A]\n"Chat" = "https://chat-a.x"\n"Painel" = "https://p.x"\n')
+    assert [(s["rotulo"], s["url"]) for s in t.servicos_do_cliente("CLIENTE-A")] == [
+        ("Chat", "https://chat-a.x"), ("Wiki", "https://w.x"), ("Painel", "https://p.x")]
+    assert t.links_do_cliente("CLIENTE-A")["Chat"] == "https://chat-a.x"

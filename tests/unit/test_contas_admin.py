@@ -236,3 +236,15 @@ def test_reset_lote_exige_csrf_fora_de_teste(tmp_path):
         sessao["admin"] = "chefe"
     for url in ("/admin/contas/reset-lote/confirmar", "/admin/contas/reset-lote"):
         assert c.post(url, data={"uid": ["ana"]}).status_code == 400
+
+
+def test_reset_individual_traz_links_do_cliente(adm):
+    _conta(adm, "ana", mail="ana@exemplo.org", ou="CLIENTE-A")
+    s = adm.app.extensions["signup"]
+    s.tema.dados["links"] = {"Chat": "https://chat.x"}
+    s.tema.por_cliente = {"cliente-a": ({"Painel A": "https://a.x"}, [])}
+    contextos = []
+    original = s.tema.email
+    s.tema.email = lambda modelo, /, **ctx: (contextos.append(ctx), original(modelo, **ctx))[1]
+    adm.client.post("/admin/contas/ana/reset")
+    assert contextos[-1]["links"] == {"Chat": "https://chat.x", "Painel A": "https://a.x"}
