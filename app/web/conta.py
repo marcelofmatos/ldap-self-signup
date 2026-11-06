@@ -81,6 +81,7 @@ def home():
     except ErroDiretorio as e:
         return _ldap_fora(e)
     return render_template("conta/home.html", conta=conta, grupos=grupos,
+                           servicos=s.tema.servicos_do_cliente(conta.get("ou")),
                            em_aberto=s.banco.alteracao_em_aberto(conta["uid"]))
 
 

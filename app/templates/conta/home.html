@@ -19,10 +19,10 @@
 {% endif %}
 <p><a class="botao" href="{{ url_for('conta.corrigir_form') }}">Pedir correção dos dados</a>
   <a class="botao" href="{{ url_for('conta.trocar_senha') }}">Trocar senha</a></p>
-{% if tema.servicos %}
+{% if servicos %}
 {% from "_icones.html" import icone %}
 <h2>Serviços</h2>
-<div class="servicos">{% for s in tema.servicos %}
+<div class="servicos">{% for s in servicos %}
   <a class="servico" href="{{ s.url }}">{{ icone(s.icone) }}<span class="titulo">{{ s.rotulo }}</span>{% if s.descricao %}<span class="descricao">{{ s.descricao }}</span>{% endif %}</a>
 {% endfor %}</div>
 {% endif %}

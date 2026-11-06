@@ -162,10 +162,18 @@ def detalhe(sid):
     return _detalhe(_carregar(sid))
 
 
-def _enviar_link(s, modelo: str, uid: str, email: str, nome: str, agora) -> bool:
+def _ou_da_conta(s, uid: str) -> str:
+    try:
+        conta = s.diretorio.obter_conta(uid)
+    except ErroDiretorio:
+        return ""
+    return (conta or {}).get("ou") or ""
+
+
+def _enviar_link(s, modelo: str, uid: str, email: str, nome: str, agora, ou: str = "") -> bool:
     token = tokens.emitir(s.banco, tokens.DEFINIR_SENHA, uid, s.cfg.token_ttl_hours, agora)
     return s.enviar(modelo, email, nome=nome, uid=uid, link=s.link(f"/definir-senha/{token}"),
-                    validade=s.cfg.token_ttl_hours, links=s.tema.dados.get("links", {}))
+                    validade=s.cfg.token_ttl_hours, links=s.tema.links_do_cliente(ou))
 
 
 def _org_escolhida(orgs: list[str]) -> str:
@@ -195,7 +203,7 @@ def _aprovar_alteracao(s, sol: dict, admin: str, bloquear, erro_ldap):
         return bloquear("Esta solicitação não está pendente.", 409)
     except ErroDiretorio as e:
         return _ldap_fora(e)  # erro_ldap já registrado no histórico
-    enviado = _enviar_link(s, "dados_atualizados", uid, sol["email"], sol["nome"], s.agora())
+    enviado = _enviar_link(s, "dados_atualizados", uid, sol["email"], sol["nome"], s.agora(), _ou_da_conta(s, uid))
     s.banco.atualizar(sid, link_enviado=int(enviado))
     s.banco.auditar(admin, "link_enviado" if enviado else "falha_envio_link", f"sol:{sid}", sol["email"], s.agora())
     flash(f"Dados da conta {uid} atualizados." + (" Link enviado." if enviado else " Falha ao enviar o link: reenvie."))
@@ -244,7 +252,7 @@ def aprovar(sid):
     except ErroDiretorio as e:
         return _ldap_fora(e)  # erro_ldap já registrado no histórico
     agora = s.agora()
-    enviado = _enviar_link(s, "conta_aprovada", uid, sol["email"], sol["nome"], agora)
+    enviado = _enviar_link(s, "conta_aprovada", uid, sol["email"], sol["nome"], agora, org)
     s.banco.atualizar(sid, link_enviado=int(enviado))
     s.banco.auditar(admin, "link_enviado" if enviado else "falha_envio_link", f"sol:{sid}", sol["email"], s.agora())
     flash(f"Conta {uid} criada." + (" Link enviado." if enviado else " Falha ao enviar o link: reenvie."))
@@ -302,7 +310,8 @@ def reenviar(sid):
         abort(409)
     agora = s.agora()
     modelo = "dados_atualizados" if sol["origem"] == "alteracao" else "conta_aprovada"
-    enviado = _enviar_link(s, modelo, sol["uid_final"], sol["email"], sol["nome"], agora)
+    enviado = _enviar_link(s, modelo, sol["uid_final"], sol["email"], sol["nome"], agora,
+                           _ou_da_conta(s, sol["uid_final"]))
     s.banco.atualizar(sid, link_enviado=int(enviado))
     s.banco.auditar(session["admin"], "link_enviado" if enviado else "falha_envio_link", f"sol:{sid}",
                     sol["email"], agora)
@@ -436,7 +445,7 @@ def email_da_conta(uid):
 def _enviar_reset(s, conta: dict, admin: str) -> bool:
     """Emite o token de definir senha, envia o e-mail reset_senha e audita (individual e em lote)."""
     agora = s.agora()
-    enviado = _enviar_link(s, "reset_senha", conta["uid"], conta["mail"], conta["cn"], agora)
+    enviado = _enviar_link(s, "reset_senha", conta["uid"], conta["mail"], conta["cn"], agora, conta.get("ou") or "")
     s.banco.auditar(admin, "reset_senha", conta["uid"], "ok" if enviado else "falha_envio", agora)
     return enviado
 

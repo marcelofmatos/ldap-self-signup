@@ -149,3 +149,15 @@ def test_excecao_em_segundo_plano_e_engolida_e_logada(amb, monkeypatch, caplog):
         r = amb.client.post("/esqueci-senha", data={"email": "maria@exemplo.org"})
     assert r.status_code == 200 and MSG in r.text
     assert "falha ao processar esqueci-senha" in caplog.text
+
+
+def test_email_traz_links_do_cliente(amb):
+    _conta(amb)
+    s = amb.app.extensions["signup"]
+    s.tema.dados["links"] = {"Chat": "https://chat.x"}
+    s.tema.por_cliente = {"cliente-a": ({"Painel A": "https://a.x"}, [])}
+    contextos = []
+    original = s.tema.email
+    s.tema.email = lambda modelo, /, **ctx: (contextos.append(ctx), original(modelo, **ctx))[1]
+    amb.client.post("/esqueci-senha", data={"email": "maria@exemplo.org"})
+    assert contextos[-1]["links"] == {"Chat": "https://chat.x", "Painel A": "https://a.x"}

@@ -59,6 +59,18 @@ def test_aprovar_cria_conta_e_envia_link(amb):
     assert "aprovar" in [a["acao"] for a in auditoria(amb.banco)]
 
 
+def test_aprovar_email_traz_links_do_cliente(amb):
+    s = amb.app.extensions["signup"]
+    s.tema.dados["links"] = {"Chat": "https://chat.x"}
+    s.tema.por_cliente = {"cliente-a": ({"Painel A": "https://a.x"}, [])}
+    sid = _pendente(amb)
+    _login(amb)
+    amb.client.post(f"/admin/solicitacao/{sid}/aprovar", data={"organizacao": "__nova__",
+                    "organizacao_nova": "CLIENTE-A", "confirmar_nova": "sim", "uid": "mariasouza"})
+    texto = amb.correio.enviados[-1]["texto"]
+    assert "https://chat.x" in texto and "https://a.x" in texto
+
+
 def test_aprovar_cliente_novo_exige_confirmacao(amb):
     sid = _pendente(amb)
     _login(amb)

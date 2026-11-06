@@ -1,3 +1,5 @@
+import pytest
+
 from tests.fakes import auditoria
 from tests.unit.test_admin import _login as _login_admin
 
@@ -33,14 +35,38 @@ def test_entrar_e_ver_home(amb):
 
 def test_home_mostra_servicos_como_cards(amb):
     _conta(amb)
-    amb.app.jinja_env.globals["tema"] = {**amb.app.jinja_env.globals["tema"], "servicos": [
+    amb.app.extensions["signup"].tema.dados["servicos"] = [
         {"rotulo": "Arquivos", "url": "https://arq.x", "icone": "arquivos", "descricao": ""},
-        {"rotulo": "Wiki", "url": "https://w.x", "icone": "wiki", "descricao": "Documentação interna"}]}
+        {"rotulo": "Wiki", "url": "https://w.x", "icone": "wiki", "descricao": "Documentação interna"}]
     _entrar(amb)
     html = amb.client.get("/minha-conta").text
     assert '<a class="servico" href="https://arq.x">' in html and "Arquivos" in html
     assert '<a class="servico" href="https://w.x">' in html and "Documentação interna" in html
     assert html.count("<svg") >= 2
+
+
+def _tema_com_clientes(amb):
+    s = amb.app.extensions["signup"]
+    s.tema.dados["servicos"] = [{"rotulo": "Geral", "url": "https://g.x", "icone": "link", "descricao": ""}]
+    s.tema.por_cliente = {"cliente-a": ({"Painel A": "https://a.x"}, [
+        {"rotulo": "Painel A", "url": "https://a.x", "icone": "painel", "descricao": ""}])}
+
+
+def test_home_mostra_servicos_gerais_e_do_cliente(amb):
+    _tema_com_clientes(amb)
+    _conta(amb)
+    _entrar(amb)
+    html = amb.client.get("/minha-conta").text
+    assert "https://g.x" in html and "https://a.x" in html
+
+
+@pytest.mark.parametrize("ou", ["CLIENTE-B", ""])
+def test_home_nao_mostra_servico_de_outro_cliente(amb, ou):
+    _tema_com_clientes(amb)
+    _conta(amb, ou=ou)
+    _entrar(amb)
+    html = amb.client.get("/minha-conta").text
+    assert "https://g.x" in html and "https://a.x" not in html
 
 
 def test_senha_errada(amb):

@@ -249,6 +249,23 @@ Os `[links]` do `tema.toml` aparecem em `/minha-conta` como **cards de serviços
   relat, monitor), `video` (reuni, video, meet, jitsi), `agenda` (agenda, calend). Sem correspondência, `link`.
 - `descricao` (opcional) é uma frase curta mostrada sob o rótulo.
 
+#### Serviços por cliente (`[links_por_cliente.<cliente>]`)
+
+Serviços que só uma organização deve ver. Cada tabela `[links_por_cliente.<cliente>]` usa o mesmo formato e a mesma
+validação de `[links]`; a conta vê os links gerais **mais** os do seu cliente (campo `ou`), na home e nos e-mails
+`conta_aprovada`, `dados_atualizados` e `reset_senha`. Conta sem cliente, ou de cliente sem tabela, vê só os gerais.
+
+```toml
+[links_por_cliente.CLIENTE-A]
+"Painel" = { url = "https://painel.exemplo.org/cliente-a", icone = "painel", descricao = "Indicadores do CLIENTE-A" }
+
+[links_por_cliente.CLIENTE-B]
+"Relatórios" = "https://relatorios.exemplo.org/cliente-b"
+```
+
+O nome do cliente não diferencia maiúsculas, acentos nem espaços nas pontas (`Cliente-A` = `CLIENTE-A`). Se um
+rótulo repetir o de um link geral, nos e-mails o do cliente prevalece.
+
 ### E-mails
 
 Cada `emails/<nome>.md` é markdown com placeholders Jinja2. A **primeira linha** deve ser `Assunto: ...`; logo abaixo,

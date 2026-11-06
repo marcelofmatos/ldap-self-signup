@@ -12,3 +12,10 @@ rodape = "Minha Plataforma — suporte: suporte@exemplo.org"
 "Arquivos" = "https://arquivos.exemplo.org/"
 "Wiki" = { url = "https://wiki.exemplo.org/", icone = "wiki", descricao = "Documentação e manuais da equipe" }
 "Chat" = { url = "https://chat.exemplo.org/", descricao = "Conversas e avisos" }
+
+# Serviços só de um cliente (opcional): mesmo formato de [links], somados aos gerais na home e nos e-mails.
+# O nome do cliente é o da conta (campo ou), sem diferenciar maiúsculas, acentos ou espaços nas pontas.
+# [links_por_cliente.CLIENTE-A]
+# "Painel" = { url = "https://painel.exemplo.org/cliente-a", icone = "painel", descricao = "Indicadores do CLIENTE-A" }
+# [links_por_cliente.CLIENTE-B]
+# "Relatórios" = "https://relatorios.exemplo.org/cliente-b"

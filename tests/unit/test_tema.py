@@ -261,3 +261,54 @@ def test_tema_exemplo_carrega_servicos():
     servicos = Tema(EXEMPLO).dados["servicos"]
     assert [(s["rotulo"], s["icone"]) for s in servicos] == [("Arquivos", "arquivos"), ("Wiki", "wiki"), ("Chat", "chat")]
     assert servicos[1]["descricao"] == "Documentação e manuais da equipe" and servicos[0]["descricao"] == ""
+
+
+TOML_CLIENTES = (
+    '[links]\n"Chat" = "https://chat.x"\n'
+    '[links_por_cliente.CLIENTE-A]\n"Painel A" = { url = "https://a.x/", descricao = "Só do A" }\n'
+    '[links_por_cliente."Cliente-B"]\n"Wiki B" = "https://b.x/"\n')
+
+
+def _tema_clientes(dir_template, toml=TOML_CLIENTES):
+    (dir_template / "tema.toml").write_text(toml, encoding="utf-8")
+    return Tema(dir_template)
+
+
+def test_links_por_cliente_somam_aos_gerais(dir_template):
+    t = _tema_clientes(dir_template)
+    assert set(t.por_cliente) == {"cliente-a", "cliente-b"}
+    assert t.dados["links"] == {"Chat": "https://chat.x"} and len(t.dados["servicos"]) == 1
+    a = t.servicos_do_cliente("CLIENTE-A")
+    assert [s["rotulo"] for s in a] == ["Chat", "Painel A"] and a[1]["descricao"] == "Só do A"
+    assert t.links_do_cliente("CLIENTE-A") == {"Chat": "https://chat.x", "Painel A": "https://a.x/"}
+
+
+@pytest.mark.parametrize("ou", ["Cliente-A", "CLIENTE-A", "cliente-a", "  cliente-a "])
+def test_cliente_normalizado_ignora_caixa_e_espacos(dir_template, ou):
+    assert "Painel A" in t_links(dir_template, ou)
+
+
+def t_links(dir_template, ou):
+    return _tema_clientes(dir_template).links_do_cliente(ou)
+
+
+def test_cliente_ignora_acento(dir_template):
+    t = _tema_clientes(dir_template, '[links_por_cliente."Clíente-Á"]\n"X" = "https://x"\n')
+    assert t.links_do_cliente("cliente-a") == {"X": "https://x"} and t.links_do_cliente("CLÍENTE-Á") == {"X": "https://x"}
+
+
+@pytest.mark.parametrize("ou", ["", None, "CLIENTE-Z"])
+def test_cliente_desconhecido_ou_vazio_so_gerais(dir_template, ou):
+    t = _tema_clientes(dir_template)
+    assert t.servicos_do_cliente(ou) == t.dados["servicos"] and t.links_do_cliente(ou) == {"Chat": "https://chat.x"}
+
+
+@pytest.mark.parametrize("toml", [
+    '[links_por_cliente.CLIENTE-A]\n"X" = "javascript:alert(1)"\n',
+    '[links_por_cliente.CLIENTE-A]\n"X" = { url = "https://x", icone = "inexistente" }\n',
+    '[links_por_cliente.CLIENTE-A]\n"X" = { descricao = "sem url" }\n',
+    '[links_por_cliente]\nCLIENTE-A = "https://x"\n',
+])
+def test_links_por_cliente_invalidos_erro_tema(dir_template, toml):
+    with pytest.raises(ErroTema):
+        _tema_clientes(dir_template, toml)

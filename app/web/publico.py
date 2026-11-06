@@ -54,7 +54,7 @@ def _enviar_esqueci_senha(s, conta: dict) -> None:
                               invalidar_anteriores=False)
         enviado = s.enviar("reset_senha", conta["mail"], nome=conta["cn"], uid=uid,
                            link=s.link(f"/definir-senha/{token}"), validade=s.cfg.token_ttl_hours,
-                           links=s.tema.dados.get("links", {}))
+                           links=s.tema.links_do_cliente(conta.get("ou")))
         s.banco.auditar("publico", "reset_senha", uid,
                         "esqueci_senha" if enviado else "esqueci_senha · falha_envio", agora)
     except Exception:

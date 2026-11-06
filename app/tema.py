@@ -80,13 +80,30 @@ class Tema:
                 else:
                     dados[chave] = valor
         dados["links"], dados["servicos"] = self._normalizar_links(dados.get("links", {}))
+        por_cliente = dados.pop("links_por_cliente", {})
+        if not isinstance(por_cliente, dict):
+            raise ErroTema("[links_por_cliente] deve ser uma tabela de tabelas ([links_por_cliente.<cliente>])")
+        self.por_cliente = {}
+        for cliente, links in por_cliente.items():
+            if not isinstance(links, dict):
+                raise ErroTema(f"[links_por_cliente.{cliente}] deve ser uma tabela (rótulo = \"url\")")
+            self.por_cliente[_sem_acento(cliente).strip()] = self._normalizar_links(links, f"links_por_cliente.{cliente}")
         return dados
 
+    def servicos_do_cliente(self, ou: str | None) -> list:
+        """Cards gerais mais os do cliente (ou desconhecido/vazio: só os gerais)."""
+        _, extras = self.por_cliente.get(_sem_acento(ou or "").strip(), ({}, []))
+        return self.dados["servicos"] + extras
+
+    def links_do_cliente(self, ou: str | None) -> dict:
+        urls, _ = self.por_cliente.get(_sem_acento(ou or "").strip(), ({}, []))
+        return {**self.dados["links"], **urls}
+
     @staticmethod
-    def _normalizar_links(links: dict) -> tuple[dict, list]:
+    def _normalizar_links(links: dict, tabela: str = "links") -> tuple[dict, list]:
         """[links] aceita rótulo = "url" ou rótulo = { url, icone?, descricao? }."""
         if not isinstance(links, dict):
-            raise ErroTema("[links] deve ser uma tabela (rótulo = \"url\")")
+            raise ErroTema(f"[{tabela}] deve ser uma tabela (rótulo = \"url\")")
         urls, servicos = {}, []
         for rotulo, valor in links.items():
             if isinstance(valor, str):
