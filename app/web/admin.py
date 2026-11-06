@@ -470,6 +470,8 @@ def reset(uid):
     enviado = _enviar_reset(s, conta, session["admin"])
     flash(f"Link de redefinição enviado para {contas.mascarar_email(conta['mail'])}." if enviado
           else "Falha ao enviar o e-mail. Tente de novo.")
+    if request.form.get("voltar") == "ficha":  # valor fixo: sem redirecionamento aberto
+        return redirect(url_for("admin.conta", uid=uid))
     return redirect(url_for("admin.contas_busca", q=uid))
 
 

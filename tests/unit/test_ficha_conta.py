@@ -122,3 +122,24 @@ def test_rotulos_dos_lotes():
     from app.web.admin import ROTULOS_ACAO
     assert ROTULOS_ACAO["reset_lote"] == "Reset de senha em lote"
     assert ROTULOS_ACAO["confirmacao_lote"] == "Confirmação de dados em lote"
+
+
+def test_senha_logo_apos_usuario_com_botao_pequeno_de_redefinicao(amb):
+    _conta(amb)
+    _login(amb)
+    html = amb.client.get("/admin/contas/ana").get_data(as_text=True)
+    dados = html.split('<dl class="dados">', 1)[1].split("</dl>", 1)[0]
+    assert dados.index("<dt>Usuário</dt>") < dados.index("<dt>Senha</dt>") < dados.index("<dt>Nome</dt>")
+    senha = dados.split("<dt>Senha</dt>", 1)[1].split("</dd>", 1)[0]
+    assert 'action="/admin/contas/ana/reset"' in senha and 'class="pequeno"' in senha
+    assert ">Enviar link de redefinição</button>" in senha
+    assert html.count('action="/admin/contas/ana/reset"') == 1  # o botão grande saiu
+
+
+def test_redefinicao_pela_ficha_volta_para_a_ficha(amb):
+    _conta(amb)
+    _login(amb)
+    r = amb.client.post("/admin/contas/ana/reset", data={"voltar": "ficha"})
+    assert r.status_code == 302 and r.headers["Location"].endswith("/admin/contas/ana")
+    r = amb.client.post("/admin/contas/ana/reset", data={"voltar": "https://fora.exemplo.org"})
+    assert "/admin/contas?q=ana" in r.headers["Location"]  # valor desconhecido: comportamento antigo

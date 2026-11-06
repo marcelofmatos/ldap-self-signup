@@ -6,6 +6,11 @@
 <p class="badges"><a class="badge" href="{{ url_for('admin.contas_busca') }}">Voltar para contas</a></p>
 <dl class="dados">
   <dt>Usuário</dt><dd>{{ conta.uid }}</dd>
+  <dt>Senha</dt><dd><form method="post" action="{{ url_for('admin.reset', uid=conta.uid) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="voltar" value="ficha">
+    <button type="submit" class="pequeno" {% if not conta.mail %}disabled title="Sem e-mail: cadastre o e-mail antes" {% endif %}>Enviar link de redefinição</button>
+  </form></dd>
   <dt>Nome</dt><dd>{{ conta.cn or '—' }}</dd>
   <dt>CPF</dt><dd>{{ conta.cpf|cpf or '—' }}</dd>
   <dt>E-mail</dt><dd>{% if conta.mail %}{{ conta.mail }}{% else %}<strong class="erro">sem e-mail</strong>{% endif %}</dd>
@@ -19,16 +24,10 @@
 {% if pendente %}<p>Aguardando confirmação de <strong>{{ pendente.email }}</strong> (pedido por {{ pendente.pedido_por }} em {{ pendente.criado_em|data }}).</p>{% endif %}
 <p><a class="botao" href="{{ url_for('admin.email_da_conta', uid=conta.uid) }}">{% if conta.mail %}Alterar e-mail{% else %}Informar e-mail{% endif %}</a></p>
 
-<div class="colunas">
 <form method="post" action="{{ url_for('admin.confirmacao', uid=conta.uid) }}">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
   <button type="submit" {% if not conta.mail %}disabled title="Sem e-mail: cadastre o e-mail antes" {% endif %}>Pedir confirmação dos dados</button>
 </form>
-<form method="post" action="{{ url_for('admin.reset', uid=conta.uid) }}">
-  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-  <button type="submit" {% if not conta.mail %}disabled title="Sem e-mail: cadastre o e-mail antes" {% endif %}>Enviar link de redefinição</button>
-</form>
-</div>
 
 <h2>Solicitações</h2>
 {% if solicitacoes %}
