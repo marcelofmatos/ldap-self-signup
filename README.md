@@ -73,6 +73,9 @@ Link usado, expirado ou cancelado mostra "link inválido".
   os grupos da conta, os serviços do `tema.toml` (`[links]`, exibidos como cards com ícone) e os botões **Trocar senha** e **Pedir correção dos dados**. Havendo
   correção ainda em aberto, a home avisa: "Correção em análise" (pendente) ou "Confirme seu novo e-mail"
   (aguardando confirmação).
+- **Atalho para o painel:** se a conta logada é admin (está em `ADMIN_UIDS` ou é `memberUid` do `ADMIN_GROUP_DN`),
+  a Minha conta mostra "Painel admin" ao lado de "Sair". Ele abre o login do painel com o usuário preenchido — a
+  senha é pedida de novo (a sessão de usuário não dá acesso ao painel); com sessão de admin já aberta, vai direto.
 - **Trocar a senha:** `/minha-conta/senha` pede a senha atual, a nova e a confirmação. A senha atual é conferida por
   bind no LDAP (errada = erro sem trocar nada) e a nova segue a mesma política de senha da definição por link. Conta
   no `RATE_LIMIT_LOGIN`. Ao trocar, os links de definir senha que a conta tinha em aberto deixam de valer e a

@@ -78,9 +78,10 @@ def home():
     s = svc()
     try:
         grupos = s.diretorio.grupos_de(conta["uid"])
+        admin = s.diretorio.e_admin(conta["uid"])
     except ErroDiretorio as e:
         return _ldap_fora(e)
-    return render_template("conta/home.html", conta=conta, grupos=grupos,
+    return render_template("conta/home.html", conta=conta, grupos=grupos, admin=admin,
                            servicos=s.tema.servicos_do_cliente(conta.get("ou")),
                            em_aberto=s.banco.alteracao_em_aberto(conta["uid"]))
 

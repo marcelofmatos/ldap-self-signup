@@ -378,3 +378,28 @@ def test_inicio_logado_tem_badge_para_minha_conta(amb):
     _entrar(amb)
     atalhos = amb.client.get("/").text.split('<p class="badges">', 1)[1].split("</p>", 1)[0]
     assert '<a class="badge" href="/minha-conta">Ir para minha conta</a>' in atalhos
+
+
+def test_admin_ve_atalho_para_o_painel(amb):
+    _conta(amb)
+    amb.dir.admins["mariasouza"] = "Nova#Senha1"
+    _entrar(amb)
+    topo = amb.client.get("/minha-conta").text.split('<div class="topo-conta">', 1)[1].split("</div>", 1)[0]
+    assert '<a class="badge" href="/admin/login?uid=mariasouza">Painel admin</a>' in topo
+
+
+def test_usuario_comum_nao_ve_atalho_para_o_painel(amb):
+    _conta(amb)
+    _entrar(amb)
+    assert "Painel admin" not in amb.client.get("/minha-conta").text
+
+
+def test_login_do_painel_vem_com_usuario_preenchido(amb):
+    html = amb.client.get("/admin/login?uid=MariaSouza").text
+    assert 'name="uid" value="mariasouza"' in html
+
+
+def test_login_do_painel_com_sessao_de_admin_vai_direto(amb):
+    _login_admin(amb)
+    r = amb.client.get("/admin/login")
+    assert r.status_code == 302 and r.headers["Location"].endswith("/admin/")

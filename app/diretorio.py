@@ -60,12 +60,8 @@ class Diretorio:
                 dn = self._dn_de(con, uid)
                 if dn is None:
                     return False
-                if uid not in self.cfg.admin_uids:
-                    if not self.cfg.admin_group_dn:
-                        return False
-                    con.search(self.cfg.admin_group_dn, f"(memberUid={esc(uid)})", BASE, attributes=["cn"])
-                    if not con.entries:
-                        return False
+                if not self._admin_por_regra(con, uid):
+                    return False
             try:
                 with self._con(dn, senha):
                     return True
@@ -73,6 +69,24 @@ class Diretorio:
                 return False
         except LDAPException as e:
             raise ErroDiretorio(str(e)) from e
+
+    def e_admin(self, uid: str) -> bool:
+        """A conta tem permissão de admin (lista ADMIN_UIDS ou memberUid do grupo de admins). Não confere senha."""
+        if not uid:
+            return False
+        try:
+            with self._con() as con:
+                return self._dn_de(con, uid) is not None and self._admin_por_regra(con, uid)
+        except LDAPException as e:
+            raise ErroDiretorio(str(e)) from e
+
+    def _admin_por_regra(self, con, uid: str) -> bool:
+        if uid in self.cfg.admin_uids:
+            return True
+        if not self.cfg.admin_group_dn:
+            return False
+        con.search(self.cfg.admin_group_dn, f"(memberUid={esc(uid)})", BASE, attributes=["cn"])
+        return bool(con.entries)
 
     def autenticar(self, uid: str, senha: str) -> bool:
         """Usuário e senha conferem (bind com o DN da conta). Não exige grupo."""

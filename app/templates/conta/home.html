@@ -2,10 +2,13 @@
 {% block conteudo %}
 <div class="topo-conta">
   <h1>Minha conta</h1>
+  <div class="topo-acoes">
+  {% if admin %}<a class="badge" href="{{ url_for('admin.login', uid=conta.uid) }}">Painel admin</a>{% endif %}
   <form method="post" action="{{ url_for('conta.sair') }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <button type="submit">Sair</button>
   </form>
+  </div>
 </div>
 {% set vazio = 'não informado' %}
 <dl class="dados">

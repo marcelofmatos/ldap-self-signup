@@ -4,8 +4,8 @@
 {% if erro %}<p class="erro">{{ erro }}</p>{% endif %}
 <form method="post">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-  <label for="uid">Usuário</label><input id="uid" name="uid" autocomplete="username" required>
-  <label for="senha">Senha</label><input id="senha" name="senha" type="password" autocomplete="current-password" required>
+  <label for="uid">Usuário</label><input id="uid" name="uid" value="{{ uid }}" autocomplete="username" required{% if not uid %} autofocus{% endif %}>
+  <label for="senha">Senha</label><input id="senha" name="senha" type="password" autocomplete="current-password" required{% if uid %} autofocus{% endif %}>
   <button type="submit">Entrar</button>
 </form>
 {% endblock %}

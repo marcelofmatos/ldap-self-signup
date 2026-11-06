@@ -47,6 +47,10 @@ class FakeDiretorio:
         self._checar()
         return bool(senha) and self.admins.get(uid) == senha
 
+    def e_admin(self, uid):
+        self._checar()
+        return uid in self.admins
+
     def autenticar(self, uid, senha):
         self._checar()
         c = self.contas.get(uid)

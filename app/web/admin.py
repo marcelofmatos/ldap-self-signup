@@ -69,6 +69,8 @@ def _ldap_fora(e):
 def login():
     s = svc()
     erro = None
+    if request.method == "GET" and session.get("admin"):
+        return redirect(url_for("admin.lista"))
     if request.method == "POST":
         if not s.limite_login.permitir(ip_cliente()):
             return render_template("limite.html"), 429
@@ -85,7 +87,9 @@ def login():
             s.banco.auditar(uid, "login", uid, "", s.agora())
             return redirect(url_for("admin.lista"))
         erro = "Usuário ou senha inválidos, ou sem permissão de administrador."
-    return render_template("admin/login.html", erro=erro), (401 if erro else 200)
+    # o atalho "Painel admin" da Minha conta abre o login já com o usuário preenchido
+    uid = request.form.get("uid") if request.method == "POST" else request.args.get("uid", "")
+    return render_template("admin/login.html", erro=erro, uid=(uid or "").strip().lower()), (401 if erro else 200)
 
 
 @bp.post("/sair")

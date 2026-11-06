@@ -220,3 +220,10 @@ def test_definir_email_troca_so_o_mail(ldap):
 def test_definir_email_conta_inexistente(ldap):
     with pytest.raises(ErroDiretorio):
         Diretorio(ldap.cfg).definir_email("naoexiste", "a@teste.local")
+
+
+def test_e_admin(ldap):
+    d = Diretorio(ldap.cfg)
+    assert d.e_admin("chefe") is True       # membro do grupo de admins
+    assert d.e_admin("antigo") is False
+    assert d.e_admin("ninguem") is False
