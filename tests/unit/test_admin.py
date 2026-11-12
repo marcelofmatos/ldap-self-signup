@@ -287,7 +287,7 @@ def test_historico_erro_ldap_na_criacao(amb):
     assert amb.banco.obter(sid)["status"] == "pendente"
     assert ("erro_ldap", "uid=mariasouza org=CLIENTE-A: ldap fora do ar") in _acoes(amb, sid)
     r = amb.client.get(f"/admin/solicitacao/{sid}")
-    assert "Histórico" in r.text and "erro_ldap" in r.text and "uid=mariasouza org=CLIENTE-A: ldap fora do ar" in r.text
+    assert "Histórico" in r.text and "Erro no LDAP" in r.text and "uid=mariasouza org=CLIENTE-A: ldap fora do ar" in r.text
     assert 'class="erro"' in r.text
 
 

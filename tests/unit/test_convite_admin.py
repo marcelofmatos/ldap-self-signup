@@ -160,7 +160,7 @@ def test_detalhe_do_convite(adm):
     assert "Convite (por chefe)" in r.text and "joanalima" in r.text and "CLIENTE-A" in r.text
     assert f'action="/admin/solicitacao/{sid}/reenviar-convite"' in r.text
     assert f'action="/admin/solicitacao/{sid}/cancelar-convite"' in r.text
-    assert "convite_criado" in r.text
+    assert "Convite criado" in r.text
 
 
 def test_detalhe_da_solicitacao_do_formulario_mostra_origem(adm):

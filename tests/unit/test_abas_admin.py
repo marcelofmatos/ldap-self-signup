@@ -17,9 +17,11 @@ def test_abas_fora_do_cartao_com_a_ativa(amb, url, ativa):
     abas = html.index('<nav class="abas"')
     assert abas < html.index('<div class="card">')  # por fora do cartão
     nav = html[abas:html.index("</nav>", abas)]
-    assert f'aria-current="page">{ativa}</a>' in nav
+    assert f'aria-current="page"><span aria-hidden="true">' in nav and f"</span> {ativa}</a>" in nav
+    ativo = nav.split('aria-current="page">', 1)[1].split("</a>", 1)[0]
+    assert ativo.endswith(f"</span> {ativa}")
     assert nav.count('aria-current="page"') == 1
-    assert ">Sair (chefe)</button>" in nav
+    assert "</span> Sair (chefe)</button>" in nav
 
 
 @pytest.mark.parametrize("base", ["app/templates/base.html", "templates-exemplo/exemplo/paginas/base.html"])

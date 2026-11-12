@@ -3,6 +3,7 @@ import logging
 import re
 from datetime import timedelta
 
+from markupsafe import Markup
 from flask import Blueprint, abort, flash, redirect, render_template, request, session, url_for
 
 from .. import aprovacao, contas, convites, lote, tokens
@@ -49,6 +50,25 @@ ROTULOS_ACAO = {
     "email_definido": "Confirmou o e-mail",
     "falha_envio_email": "Falha ao enviar a confirmação de e-mail",
 }
+
+# Emoji decorativo de cada ação (o rótulo é o texto lido); mesmas chaves de ROTULOS_ACAO.
+EMOJIS_ACAO = {
+    "login": "🔑", "login_usuario": "👤", "solicitacao_criada": "📝", "email_confirmado": "📧",
+    "aprovar": "✅", "rejeitar": "❌", "destravar": "🔓", "aprovacao_bloqueada": "⛔", "erro_ldap": "⚠️",
+    "link_enviado": "🔗", "falha_envio_link": "⚠️", "falha_envio_aviso": "⚠️", "falha_envio_convite": "⚠️",
+    "reset_senha": "🔁", "senha_definida": "🔐", "senha_alterada": "🔐", "alteracao_solicitada": "✏️",
+    "confirmacao_dados": "📋", "dados_confirmados": "☑️", "convite_criado": "📨", "convite_enviado": "📤",
+    "convite_aceito": "🤝", "convite_alterado": "✏️", "convite_preenchido": "📝", "convite_cancelado": "🚫",
+    "lote_enviado": "📦", "reset_lote": "🔁", "confirmacao_lote": "📋", "email_solicitado": "📧",
+    "email_definido": "📧", "falha_envio_email": "⚠️",
+}
+
+
+def rotulo_acao(codigo: str):
+    """Rótulo da ação do histórico com o emoji decorativo; código sem rótulo aparece como está."""
+    if codigo not in ROTULOS_ACAO:
+        return codigo
+    return Markup('<span aria-hidden="true">{}</span> {}').format(EMOJIS_ACAO[codigo], ROTULOS_ACAO[codigo])
 
 
 def requer_admin(f):

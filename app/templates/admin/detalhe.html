@@ -131,7 +131,7 @@ para pendente e aprove de novo.</p>
   <tbody>
   {% for h in historico %}
   <tr{% if h.acao in acoes_erro %} class="erro"{% endif %}>
-    <td>{{ h.quando|data }}</td><td>{{ h.ator }}</td><td>{{ h.acao }}</td><td class="quebra">{{ h.detalhe }}</td></tr>
+    <td>{{ h.quando|data }}</td><td>{{ h.ator }}</td><td>{{ h.acao|acao }}</td><td class="quebra">{{ h.detalhe }}</td></tr>
   {% endfor %}
   </tbody>
 </table>

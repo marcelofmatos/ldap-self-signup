@@ -18,7 +18,7 @@ def create_app(cfg, *, banco=None, diretorio=None, correio=None, tema=None, relo
     from .ratelimit import LimiteTaxa
     from .servicos import Servicos, na_hora
     from .tema import Tema
-    from .web.admin import ROTULOS_ACAO
+    from .web.admin import rotulo_acao
     from .web.admin import bp as bp_admin
     from .web.conta import bp as bp_conta
     from .web.publico import bp as bp_publico
@@ -65,7 +65,7 @@ def create_app(cfg, *, banco=None, diretorio=None, correio=None, tema=None, relo
     fuso = ZoneInfo(cfg.timezone_exibicao)
     app.jinja_env.filters.update(data=lambda valor: formatos.data(valor, fuso), cpf=formatos.cpf,
                                  telefone=formatos.telefone, cpf_mascarado=formatos.cpf_mascarado,
-                                 acao=lambda codigo: ROTULOS_ACAO.get(codigo, codigo))
+                                 acao=rotulo_acao)
     app.register_blueprint(bp_publico)
     app.register_blueprint(bp_admin)
     app.register_blueprint(bp_conta)
