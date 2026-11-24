@@ -208,3 +208,18 @@ def test_exige_login(amb):
     r = _atualizar(amb, sid, uid_conta="msouza", organizacao="CLIENTE-A")
     assert r.status_code == 302 and "/admin/login" in r.headers["Location"]
     assert amb.dir.contas["msouza"]["cn"] == "Maria Antiga"
+
+
+def test_reenviar_apos_atualizar_usa_conta_atualizada(adm):
+    sid = _mesma_pessoa(adm)
+    _atualizar(adm, sid, uid_conta="msouza", organizacao="CLIENTE-A")
+    assert adm.client.post(f"/admin/solicitacao/{sid}/reenviar").status_code == 302
+    email = adm.correio.enviados[-1]
+    assert "sua conta foi atualizada" in email["assunto"] and "/definir-senha/" in email["texto"]
+
+
+def test_reenviar_apos_aprovar_continua_conta_aprovada(adm):
+    sid = _pendente(adm)
+    adm.client.post(f"/admin/solicitacao/{sid}/aprovar", data={"organizacao": "CLIENTE-A", "uid": "mariasouza"})
+    assert adm.client.post(f"/admin/solicitacao/{sid}/reenviar").status_code == 302
+    assert "sua conta foi aprovada" in adm.correio.enviados[-1]["assunto"]

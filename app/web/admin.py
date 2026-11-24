@@ -392,7 +392,12 @@ def reenviar(sid):
     if sol["status"] != "aprovada":
         abort(409)
     agora = s.agora()
-    modelo = "dados_atualizados" if sol["origem"] == "alteracao" else "conta_aprovada"
+    if sol["origem"] == "alteracao":
+        modelo = "dados_atualizados"
+    elif any(h["acao"] == "conta_atualizada" for h in s.banco.historico(sid)):
+        modelo = "conta_atualizada"  # aprovada por "Atualizar conta existente"
+    else:
+        modelo = "conta_aprovada"
     enviado = _enviar_link(s, modelo, sol["uid_final"], sol["email"], sol["nome"], agora,
                            _ou_da_conta(s, sol["uid_final"]))
     s.banco.atualizar(sid, link_enviado=int(enviado))
