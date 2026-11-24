@@ -109,6 +109,8 @@ EMAILS_PADRAO = [
      "Conferir meus dados"),
     ("dados_atualizados", {"nome": "Maria", "uid": "mariasouza", "link": "https://x/d/t", "validade": 24},
      "Definir minha senha"),
+    ("conta_atualizada", {"nome": "Maria", "uid": "mariasouza", "link": "https://x/d/t", "validade": 24},
+     "Definir nova senha"),
     ("convite", {"nome": "Maria", "link": "https://x/convite/t", "validade_dias": 7, "convidado_por": "chefe"},
      "Aceitar convite"),
     ("convite_email", {"link": "https://x/convite/t", "validade_dias": 7, "convidado_por": "Maria"},

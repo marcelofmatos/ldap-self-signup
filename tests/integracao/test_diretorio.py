@@ -227,3 +227,34 @@ def test_e_admin(ldap):
     assert d.e_admin("chefe") is True       # membro do grupo de admins
     assert d.e_admin("antigo") is False
     assert d.e_admin("ninguem") is False
+
+
+def test_atualizar_dados_com_org_troca_ou_e_o(ldap):
+    d = Diretorio(ldap.cfg)
+    d.criar_conta(uid="mariasouza", nome="Maria da Silva Souza", cpf="52998224725",
+                  mail="maria@teste.local", telefone="+5511912345678", org="CLIENTE-A")
+    d.atualizar_dados("mariasouza", nome="Maria Souza", cpf="52998224725", mail="maria@teste.local",
+                      telefone="+5511912345678", org="CLIENTE-B")
+    e = _entrada(ldap.con, "mariasouza")
+    assert e["ou"] == ["CLIENTE-B"] and e["o"] == ["CLIENTE-B"]
+
+
+def test_atualizar_dados_sem_org_mantem_ou(ldap):
+    d = Diretorio(ldap.cfg)
+    d.criar_conta(uid="mariasouza", nome="Maria da Silva Souza", cpf="52998224725",
+                  mail="maria@teste.local", telefone="+5511912345678", org="CLIENTE-A")
+    d.atualizar_dados("mariasouza", nome="Maria Souza", cpf="52998224725", mail="maria@teste.local",
+                      telefone="+5511912345678")
+    assert _entrada(ldap.con, "mariasouza")["ou"] == ["CLIENTE-A"]
+
+
+def test_atualizar_dados_com_org_nao_mexe_em_grupo_nem_senha(ldap):
+    d = Diretorio(ldap.cfg)
+    d.criar_conta(uid="mariasouza", nome="Maria da Silva Souza", cpf="52998224725",
+                  mail="maria@teste.local", telefone="+5511912345678", org="CLIENTE-A")
+    d.definir_senha("mariasouza", "Nova#Senha1")
+    antes = _entrada(ldap.con, "mariasouza")["userPassword"]
+    d.atualizar_dados("mariasouza", nome="Maria Souza", cpf="52998224725", mail="maria@teste.local",
+                      telefone="+5511912345678", org="CLIENTE-B")
+    assert _entrada(ldap.con, "mariasouza")["userPassword"] == antes
+    assert "mariasouza" in _membros(ldap.con)

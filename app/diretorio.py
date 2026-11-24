@@ -189,8 +189,11 @@ class Diretorio:
         a = achados[0][1]
         return {**self._resumo(a), "cpf": _cpf(a), "telefone": _v(a, "telephoneNumber")}
 
-    def atualizar_dados(self, uid: str, *, nome: str, cpf: str, mail: str, telefone: str) -> None:
-        """Atualiza nome (cn/sn/givenName/gecos), a linha CPF da description, mail e telefone. uid/ou não mudam."""
+    def atualizar_dados(self, uid: str, *, nome: str, cpf: str, mail: str, telefone: str,
+                        org: str | None = None) -> None:
+        """Atualiza nome (cn/sn/givenName/gecos), a linha CPF da description, mail e telefone.
+
+        uid não muda; ou/o só mudam quando `org` é informado."""
         n = contas.derivar_nomes(nome)
         try:
             with self._con() as con:
@@ -199,12 +202,16 @@ class Diretorio:
                     raise ErroDiretorio(f"conta {uid} não encontrada")
                 dn, attrs = achados[0]
                 descricoes = [d for d in _lista(attrs, "description") if not d.startswith("CPF:")]
-                con.modify(dn, {
+                mudancas = {
                     "cn": [(MODIFY_REPLACE, [n["cn"]])], "sn": [(MODIFY_REPLACE, [n["sn"]])],
                     "givenName": [(MODIFY_REPLACE, [n["given_name"]])], "gecos": [(MODIFY_REPLACE, [n["cn"]])],
                     "description": [(MODIFY_REPLACE, [*descricoes, f"CPF: {cpf}"])],
                     "mail": [(MODIFY_REPLACE, [mail])], "telephoneNumber": [(MODIFY_REPLACE, [telefone])],
-                })
+                }
+                if org is not None:
+                    mudancas["ou"] = [(MODIFY_REPLACE, [org])]
+                    mudancas["o"] = [(MODIFY_REPLACE, [org])]
+                con.modify(dn, mudancas)
         except LDAPException as e:
             raise ErroDiretorio(str(e)) from e
 

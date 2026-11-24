@@ -85,13 +85,15 @@ class FakeDiretorio:
         c = self.contas.get(uid)
         return {k: c.get(k, "") for k in ("uid", "cn", "mail", "ou", "cpf", "telefone")} if c else None
 
-    def atualizar_dados(self, uid, *, nome, cpf, mail, telefone):
+    def atualizar_dados(self, uid, *, nome, cpf, mail, telefone, org=None):
         self._checar()
         if self.falhar_criacao:
             raise ErroDiretorio("ldap fora do ar")
         if uid not in self.contas:
             raise ErroDiretorio(f"conta {uid} não encontrada")
         self.contas[uid].update(cn=contas.derivar_nomes(nome)["cn"], cpf=cpf, mail=mail, telefone=telefone)
+        if org is not None:
+            self.contas[uid]["ou"] = org
 
     def definir_email(self, uid, email):
         self._checar()

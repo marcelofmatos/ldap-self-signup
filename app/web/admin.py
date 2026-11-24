@@ -49,6 +49,7 @@ ROTULOS_ACAO = {
     "email_solicitado": "Pediu confirmação de e-mail",
     "email_definido": "Confirmou o e-mail",
     "falha_envio_email": "Falha ao enviar a confirmação de e-mail",
+    "conta_atualizada": "Atualizou a conta existente",
 }
 
 # Emoji decorativo de cada ação (o rótulo é o texto lido); mesmas chaves de ROTULOS_ACAO.
@@ -60,7 +61,7 @@ EMOJIS_ACAO = {
     "confirmacao_dados": "📋", "dados_confirmados": "☑️", "convite_criado": "📨", "convite_enviado": "📤",
     "convite_aceito": "🤝", "convite_alterado": "✏️", "convite_preenchido": "📝", "convite_cancelado": "🚫",
     "lote_enviado": "📦", "reset_lote": "🔁", "confirmacao_lote": "📋", "email_solicitado": "📧",
-    "email_definido": "📧", "falha_envio_email": "⚠️",
+    "email_definido": "📧", "falha_envio_email": "⚠️", "conta_atualizada": "🔄",
 }
 
 

@@ -54,3 +54,23 @@ def aplicar_alteracao(s, sid: int, *, ator: str) -> None:
     agora = s.agora()
     s.banco.atualizar(sid, status="aprovada", uid_final=uid, decidido_por=ator, decidido_em=iso(agora))
     s.banco.auditar(ator, "aprovar", f"sol:{sid}", f"alteração uid={uid}", agora)
+
+
+def atualizar_conta_existente(s, sid: int, *, uid: str, org: str, ator: str) -> None:
+    """Reivindica a solicitação, grava os dados dela (e o cliente `org`) na conta existente e registra.
+
+    Erro de LDAP: devolve a solicitação para pendente, registra erro_ldap no histórico e propaga.
+    """
+    if not s.banco.reivindicar(sid):
+        raise JaReivindicada()
+    sol = s.banco.obter(sid)
+    try:
+        s.diretorio.atualizar_dados(uid, nome=sol["nome"], cpf=sol["cpf"], mail=sol["email"],
+                                    telefone=sol["telefone"], org=org)
+    except ErroDiretorio as e:
+        s.banco.atualizar(sid, status="pendente")
+        s.banco.auditar(ator, "erro_ldap", f"sol:{sid}", f"conta existente uid={uid}: {e}", s.agora())
+        raise
+    agora = s.agora()
+    s.banco.atualizar(sid, status="aprovada", uid_final=uid, decidido_por=ator, decidido_em=iso(agora))
+    s.banco.auditar(ator, "conta_atualizada", f"sol:{sid}", f"uid={uid} org={org}", agora)
