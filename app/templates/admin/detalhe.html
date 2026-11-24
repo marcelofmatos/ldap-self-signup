@@ -106,21 +106,35 @@
 <h2>Atualizar conta existente</h2>
 <p>Em vez de criar outra conta, grava os dados desta solicitação na conta que já existe e manda o link para
 definir a senha. Grupos e senha atual da conta não mudam.</p>
+{% for e in existentes if e.admin %}
+<h3>Conta {{ e.conta.uid }}</h3>
+<p class="aviso">Conta de administrador: atualize manualmente.</p>
+{% endfor %}
+{% if oferecidas %}
 <form method="post" action="{{ url_for('admin.atualizar_conta', sid=sol.id) }}" class="atualizar-conta">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-  {% for e in existentes %}
-  {% if existentes|length == 1 %}
+  {% for e in oferecidas %}
+  {% if oferecidas|length == 1 %}
   <input type="hidden" name="uid_conta" value="{{ e.conta.uid }}">
   <h3>Conta {{ e.conta.uid }}</h3>
   {% else %}
   <label class="check"><input type="radio" name="uid_conta" value="{{ e.conta.uid }}" required> Conta <strong>{{ e.conta.uid }}</strong></label>
   {% endif %}
   {{ comparacao(e.conta, sol, e.alterados, cliente_existente) }}
+  {% if e.email_novo %}
+  <p class="aviso">O e-mail da solicitação ({{ sol.email }}) é diferente do e-mail atual da conta
+    ({{ e.conta.mail or 'nenhum' }}). Confirme a identidade da pessoa por outro canal antes de atualizar: o link de
+    senha irá para o e-mail novo.</p>
+  {% endif %}
   {% endfor %}
   {{ seletor_cliente(orgs, cliente_existente, org_nova_existente, "_existente") }}
   {% if confirmar_existente %}
   <label class="check"><input type="checkbox" name="confirmar_outra_pessoa" value="sim"> Confirmo que é outra pessoa
     (exigido se o CPF ou o e-mail estiver numa conta diferente da escolhida)</label>
+  {% endif %}
+  {% if email_novo_existente %}
+  <label class="check"><input type="checkbox" name="confirmar_email_novo" value="sim"{% if email_novo_sempre %} required{% endif %}>
+    Confirmei a identidade da pessoa e o novo e-mail</label>
   {% endif %}
   <button type="submit">Atualizar conta existente e avisar</button>
 </form>
@@ -138,6 +152,7 @@ definir a senha. Grupos e senha atual da conta não mudam.</p>
   nova.addEventListener('input', mostrar);
 })();
 </script>
+{% endif %}
 </section>
 {% endif %}
 {% elif sol.status == 'aprovando' %}

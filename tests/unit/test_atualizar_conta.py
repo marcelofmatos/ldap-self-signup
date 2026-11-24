@@ -137,7 +137,8 @@ def test_conflito_com_outra_conta_exige_confirmacao(adm):
     r = _atualizar(adm, sid, uid_conta="msouza", organizacao="CLIENTE-A")
     assert r.status_code == 409 and "Confirme que é outra pessoa" in r.text
     assert adm.dir.contas["msouza"]["mail"] == "b@exemplo.org"
-    r = _atualizar(adm, sid, uid_conta="msouza", organizacao="CLIENTE-A", confirmar_outra_pessoa="sim")
+    r = _atualizar(adm, sid, uid_conta="msouza", organizacao="CLIENTE-A", confirmar_outra_pessoa="sim",
+                   confirmar_email_novo="sim")
     assert r.status_code == 302 and adm.dir.contas["msouza"]["mail"] == "maria@exemplo.org"
 
 
@@ -223,3 +224,50 @@ def test_reenviar_apos_aprovar_continua_conta_aprovada(adm):
     adm.client.post(f"/admin/solicitacao/{sid}/aprovar", data={"organizacao": "CLIENTE-A", "uid": "mariasouza"})
     assert adm.client.post(f"/admin/solicitacao/{sid}/reenviar").status_code == 302
     assert "sua conta foi aprovada" in adm.correio.enviados[-1]["assunto"]
+
+
+AVISO_EMAIL = "Confirme a identidade da pessoa por outro canal antes de atualizar"
+
+
+@pytest.mark.parametrize("mail_atual", ["antiga@exemplo.org", ""])
+def test_email_diferente_exige_confirmacao(adm, mail_atual):
+    _conta(adm, "mariasouza", cpf="11144477735", mail=mail_atual)  # mesmo uid, outro e-mail (ou nenhum)
+    sid = _pendente(adm)
+    form = _form_atualizar(adm.client.get(f"/admin/solicitacao/{sid}").text)
+    assert AVISO_EMAIL in form and "O e-mail da solicitação (maria@exemplo.org) é diferente" in form
+    assert 'name="confirmar_email_novo"' in form and "Confirmei a identidade da pessoa e o novo e-mail" in form
+    enviados = len(adm.correio.enviados)
+    r = _atualizar(adm, sid, uid_conta="mariasouza", organizacao="CLIENTE-A")
+    assert r.status_code == 409 and adm.dir.contas["mariasouza"]["mail"] == mail_atual
+    assert adm.banco.obter(sid)["status"] == "pendente" and len(adm.correio.enviados) == enviados
+    r = _atualizar(adm, sid, uid_conta="mariasouza", organizacao="CLIENTE-A", confirmar_email_novo="sim")
+    assert r.status_code == 302 and adm.dir.contas["mariasouza"]["mail"] == "maria@exemplo.org"
+
+
+def test_email_igual_sem_maiusculas_nao_pede_confirmacao(adm):
+    _conta(adm, "msouza", cpf="52998224725", mail="Maria@Exemplo.ORG")
+    sid = _pendente(adm)
+    form = _form_atualizar(adm.client.get(f"/admin/solicitacao/{sid}").text)
+    assert AVISO_EMAIL not in form and 'name="confirmar_email_novo"' not in form
+    assert _atualizar(adm, sid, uid_conta="msouza", organizacao="CLIENTE-A").status_code == 302
+
+
+def test_conta_admin_nao_e_oferecida_nem_aceita(adm):
+    _conta(adm, "chefe", cpf="52998224725", mail="maria@exemplo.org")  # chefe é admin no FakeDiretorio
+    sid = _pendente(adm)
+    html = adm.client.get(f"/admin/solicitacao/{sid}").text
+    assert SECAO in html and "Conta de administrador: atualize manualmente" in html
+    assert "/atualizar-conta" not in html and 'name="uid_conta"' not in html
+    r = _atualizar(adm, sid, uid_conta="chefe", organizacao="CLIENTE-A")
+    assert r.status_code == 403 and adm.dir.contas["chefe"]["cn"] == "Maria Antiga"
+    assert adm.banco.obter(sid)["status"] == "pendente"
+
+
+def test_conta_admin_entre_varias_fica_sem_radio(adm):
+    _conta(adm, "chefe", cpf="52998224725", mail="x@exemplo.org")
+    _conta(adm, "msouza", cpf="11144477735", mail="maria@exemplo.org")
+    sid = _pendente(adm)
+    html = adm.client.get(f"/admin/solicitacao/{sid}").text
+    assert "Conta de administrador: atualize manualmente" in html
+    form = _form_atualizar(html)
+    assert 'value="chefe"' not in form and 'type="hidden" name="uid_conta" value="msouza"' in form
