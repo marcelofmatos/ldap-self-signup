@@ -187,12 +187,44 @@ Se o processo morrer entre a reivindicação e o fim da aprovação, a solicita�
 avisa "N solicitações em aprovação — verificar" (link para o filtro `status=aprovando`) e o detalhe oferece **Voltar para pendente** (`POST /admin/solicitacao/<id>/destravar`,
 só com status `aprovando`, auditado como `destravar`). Antes, o admin confere no LDAP se a conta chegou a ser criada.
 
+### Atualizar conta existente (v0.13)
+
+Quando o uid, o CPF ou o e-mail de uma solicitação `pendente` (que não seja correção de dados) já existem no LDAP, o
+admin pode usá-la para **atualizar a conta existente** em vez de criar outra. A seção do detalhe mostra atual × novo e
+atualiza nome, CPF, e-mail, telefone e o cliente escolhido; grupos e senha ficam como estão. Exige "Confirmo que é outra
+pessoa" quando o CPF ou o e-mail é de outra conta e, se o e-mail muda, "Confirmei a identidade da pessoa e o novo
+e-mail". Contas de admin não são oferecidas. A solicitação segue `pendente` → `aprovando` → `aprovada` (`uid_final` =
+a conta, auditoria `conta_atualizada`). A pessoa recebe o e-mail `conta_atualizada`: a senha atual continua valendo e o
+link de nova senha é opcional.
+
+```mermaid
+sequenceDiagram
+  actor A as Admin
+  participant S as ldap-self-signup
+  participant L as OpenLDAP
+  participant M as SMTP
+  actor P as Pessoa
+  A->>S: abre solicitação pendente
+  S->>L: busca contas por uid, CPF e e-mail
+  S-->>A: candidatos, atual x novo, avisos
+  A->>S: atualizar conta com as confirmações exigidas
+  S->>S: reivindica a solicitação, status aprovando
+  S->>L: modifica nome, CPF, e-mail, telefone e cliente
+  alt LDAP falhou
+    S->>S: histórico erro_ldap, status volta a pendente
+  else conta atualizada
+    S->>S: status aprovada, uid_final, histórico conta_atualizada
+    S->>M: e-mail conta_atualizada, link de nova senha opcional
+    M-->>P: senha atual continua valendo
+  end
+```
+
 ### Histórico da solicitação
 
 Cada ação e falha ligada a uma solicitação vai para a tabela `auditoria` com `alvo = sol:<id>`: `solicitacao_criada`,
 `email_confirmado`, `aprovar`, `aprovacao_bloqueada` (motivo), `erro_ldap` (uid, cliente e mensagem do LDAP, sem
 senha), `link_enviado`/`falha_envio_link` (também no reenvio), `rejeitar`/`falha_envio_aviso`, `destravar` e
-`senha_definida` (registrada também no `sol:<id>` da solicitação aprovada daquele uid). Convites acrescentam
+`conta_atualizada` (atualização de conta existente), `senha_definida` (registrada também no `sol:<id>` da solicitação aprovada daquele uid). Convites acrescentam
 `convite_criado`, `convite_enviado`/`falha_envio_convite`, `convite_aceito`, `convite_alterado` (só os nomes dos
 campos) e `convite_cancelado`; no aceite o ator é `convite`. O detalhe mostra a seção
 **Histórico** em ordem cronológica, com os erros destacados.
@@ -506,6 +538,7 @@ sequenceDiagram
 `aguardando_confirmacao` (e-mail ainda não confirmado) → `pendente` → `aprovando` (reivindicada, transitório) →
 `aprovada`, ou `rejeitada`. `expirada` quando a confirmação vence ou uma solicitação mais nova do **mesmo CPF e e-mail**, já com o e-mail comprovado, a substitui (a alteração de dados não
 expira nem é expirada por cadastro novo: só uma nova alteração da mesma conta a expira). A alteração nasce `pendente`, ou `aguardando_confirmacao` quando corrige o e-mail (o admin só é avisado após a confirmação; o prazo conta do consentimento e vale `expirar_aguardando`).
+Atualizar uma conta existente também leva `pendente` → `aprovando` → `aprovada` (`uid_final` = a conta).
 `aprovando` volta a `pendente` quando o LDAP falha na aprovação ou quando o admin usa **Voltar para pendente**.
 Convites nascem `convidado`: o aceite sem mudanças passa por `aprovando` até `aprovada` (falha no LDAP volta a
 `convidado`); o aceite com mudanças vai a `pendente` ou `aguardando_confirmacao`; cancelar ou substituir leva a `expirada`. O convite por e-mail (`origem = convite_email`) nasce `convidado` só com o
@@ -528,6 +561,7 @@ stateDiagram-v2
   pendente --> expirada: nova solicitação do mesmo CPF e e-mail, exceto alteração
   pendente --> expirada: nova alteração da mesma conta
   pendente --> aprovando: aprovar - reivindicação atômica
+  pendente --> aprovando: atualizar conta existente
   pendente --> rejeitada: rejeitar - atômico
   aprovando --> aprovada: conta criada no LDAP
   aprovando --> pendente: falha no LDAP ou destravar

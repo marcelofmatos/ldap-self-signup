@@ -325,10 +325,26 @@ itálico. Placeholders:
   público e convite com e-mail alterado) ou na hora (convite aceito com o e-mail do convite e convite por e-mail
   preenchido). Quem só conhece o CPF de alguém não consegue cancelar o pedido dessa pessoa; CPF igual com e-mail
   diferente deixa os dois pedidos para o admin, que vê o conflito no detalhe.
+- **Atualizar conta existente:** veja a subseção abaixo.
 - Cliente (`ou`) desconhecido exige a confirmação "cliente novo". Conflito de uid bloqueia, conflito de CPF/e-mail exige confirmar "é outra pessoa".
 - Falha ao avisar a rejeição por e-mail é exibida no painel. Falha ao enviar o link após criar a conta deixa `link_enviado=false` e habilita "reenviar link".
 - `memberUid` antigo no grupo padrão é tolerado ao criar a conta.
 - Confirmação de e-mail é GET (página) + POST (botão), protegendo o token de pré-carregamento de links.
+
+### Atualizar conta existente
+
+No detalhe de uma solicitação `pendente` que **não** é correção de dados, quando o uid, o CPF ou o e-mail já existem no
+LDAP, o admin pode usar a solicitação para **atualizar a conta existente** em vez de criar outra. Com um único
+candidato ele aparece fixo, com vários o admin escolhe. A seção mostra **atual × novo** e atualiza nome, CPF, e-mail e
+telefone, além do cliente (`ou`/`o`) escolhido pelo admin. Grupos e senha **não mudam**.
+
+- **Salvaguardas:** se o CPF ou o e-mail pertence a **outra** conta, exige "Confirmo que é outra pessoa". Se o e-mail
+  novo difere do atual da conta, mostra um aviso e exige "Confirmei a identidade da pessoa e o novo e-mail". Contas de
+  **admin não são oferecidas**.
+- **Estados e auditoria:** `pendente` → `aprovando` → `aprovada`, com `uid_final` = a conta e a entrada `conta_atualizada`
+  no histórico (🔄 "Atualizou a conta existente"). Erro de LDAP devolve a solicitação a `pendente`.
+- **E-mail à pessoa:** `conta_atualizada` avisa que a senha atual continua valendo e que o link para definir uma nova é
+  opcional. "Reenviar link" reenvia esse mesmo e-mail.
 
 ### Convites
 
