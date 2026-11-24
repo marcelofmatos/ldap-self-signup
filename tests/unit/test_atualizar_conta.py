@@ -271,3 +271,16 @@ def test_conta_admin_entre_varias_fica_sem_radio(adm):
     assert "Conta de administrador: atualize manualmente" in html
     form = _form_atualizar(html)
     assert 'value="chefe"' not in form and 'type="hidden" name="uid_conta" value="msouza"' in form
+
+
+def test_conta_que_deixou_de_existir_recusada(adm, monkeypatch):
+    sid = _mesma_pessoa(adm)
+    assert "/atualizar-conta" in adm.client.get(f"/admin/solicitacao/{sid}").text
+    enviados = len(adm.correio.enviados)
+    # removida entre o GET e o POST: a busca de conflitos ainda a acha, a leitura da conta não
+    original = adm.dir.obter_conta
+    monkeypatch.setattr(adm.dir, "obter_conta", lambda uid: None if uid == "msouza" else original(uid))
+    r = _atualizar(adm, sid, uid_conta="msouza", organizacao="CLIENTE-A", confirmar_email_novo="sim")
+    assert r.status_code == 409 and "A conta msouza não existe mais no LDAP." in r.text
+    assert adm.banco.obter(sid)["status"] == "pendente" and len(adm.correio.enviados) == enviados
+    assert auditoria(adm.banco)[0]["acao"] == "aprovacao_bloqueada"

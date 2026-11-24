@@ -336,10 +336,12 @@ def atualizar_conta(sid):
     if uid not in _candidatos(conflitos):
         return bloquear("Escolha uma das contas existentes listadas.", 400)
     try:
-        conta, conta_admin = s.diretorio.obter_conta(uid) or {}, s.diretorio.e_admin(uid)
+        conta, conta_admin = s.diretorio.obter_conta(uid), s.diretorio.e_admin(uid)
     except ErroDiretorio as e:
         s.banco.auditar(admin, "erro_ldap", f"sol:{sid}", f"ao consultar a conta {uid}: {e}", s.agora())
         return _ldap_fora(e)
+    if conta is None:
+        return bloquear(f"A conta {uid} não existe mais no LDAP.", 409)
     if conta_admin:
         return bloquear("Conta de administrador: atualize manualmente.", 403)
     try:
