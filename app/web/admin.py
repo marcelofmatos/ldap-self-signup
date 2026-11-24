@@ -161,22 +161,38 @@ def _conflitos(s, sol: dict) -> dict:
     return {"uid": [], "cpf": [u for u in c["cpf"] if u != proprio], "mail": [u for u in c["mail"] if u != proprio]}
 
 
+def _candidatos(conflitos: dict) -> list[str]:
+    """Contas que a solicitação pode atualizar: as dos conflitos de uid, CPF e e-mail, em ordem e sem repetir."""
+    return list(dict.fromkeys(conflitos["uid"] + conflitos["cpf"] + conflitos["mail"]))
+
+
+def _de_outra_conta(conflitos: dict, uid: str) -> bool:
+    """O CPF ou o e-mail da solicitação está numa conta que não é `uid`."""
+    return any(u != uid for u in conflitos["cpf"] + conflitos["mail"])
+
+
 def _detalhe(sol: dict, erro: str | None = None, status: int = 200):
     s = svc()
-    conflitos, orgs, atual = SEM_CONFLITOS, [], None
+    conflitos, orgs, atual, existentes = SEM_CONFLITOS, [], None, []
     try:
         if sol["status"] == "pendente":
             conflitos = _conflitos(s, sol)
             if sol["origem"] != "alteracao":
                 orgs = s.diretorio.organizacoes()
+                existentes = [c for c in map(s.diretorio.obter_conta, _candidatos(conflitos)) if c]
         if sol["origem"] == "alteracao" and sol["status"] in ("pendente", "aprovando"):
             atual = s.diretorio.obter_conta(sol["uid_sugerido"])
     except ErroDiretorio as e:
         return _ldap_fora(e)
     alterados = contas.campos_alterados(atual, sol) if atual else []
     org_nova = sol["organizacao"] if sol["organizacao"] and sol["organizacao"] not in orgs else ""
+    # atualizar conta existente: cada candidata com o que muda; o cliente parte do da solicitação ou do da conta
+    existentes = [{"conta": c, "alterados": contas.campos_alterados(c, sol)} for c in existentes]
+    cliente_existente = sol["organizacao"] or (existentes[0]["conta"]["ou"] if existentes else "")
     return render_template("admin/detalhe.html", sol=sol, org_nova=org_nova, conflitos=conflitos, orgs=orgs, atual=atual,
-                           alterados=alterados,
+                           alterados=alterados, existentes=existentes, cliente_existente=cliente_existente,
+                           org_nova_existente=cliente_existente if cliente_existente not in orgs else "",
+                           confirmar_existente=any(_de_outra_conta(conflitos, e["conta"]["uid"]) for e in existentes),
                            consentimento=s.banco.consentimento(sol["id"]), historico=s.banco.historico(sol["id"]),
                            acoes_erro=ACOES_ERRO, rotulos=STATUS, erro=erro), status
 
@@ -281,6 +297,48 @@ def aprovar(sid):
     s.banco.atualizar(sid, link_enviado=int(enviado))
     s.banco.auditar(admin, "link_enviado" if enviado else "falha_envio_link", f"sol:{sid}", sol["email"], s.agora())
     flash(f"Conta {uid} criada." + (" Link enviado." if enviado else " Falha ao enviar o link: reenvie."))
+    return redirect(url_for("admin.detalhe", sid=sid))
+
+
+@bp.post("/solicitacao/<int:sid>/atualizar-conta")
+@requer_admin
+def atualizar_conta(sid):
+    """Grava os dados da solicitação numa conta existente (que conflita com ela) em vez de criar outra."""
+    s, sol, admin = svc(), _carregar(sid), session["admin"]
+
+    def bloquear(motivo: str, status: int):
+        s.banco.auditar(admin, "aprovacao_bloqueada", f"sol:{sid}", motivo, s.agora())
+        return _detalhe(_carregar(sid), motivo, status)
+
+    if sol["status"] != "pendente":
+        return bloquear("Esta solicitação não está pendente.", 409)
+    if sol["origem"] == "alteracao":
+        return bloquear("Uma alteração de dados já é da própria conta: use Aprovar.", 400)
+    try:
+        orgs = s.diretorio.organizacoes()
+        conflitos = _conflitos(s, sol)
+    except ErroDiretorio as e:
+        s.banco.auditar(admin, "erro_ldap", f"sol:{sid}", f"ao consultar contas existentes: {e}", s.agora())
+        return _ldap_fora(e)
+    uid = request.form.get("uid_conta", "")
+    if uid not in _candidatos(conflitos):
+        return bloquear("Escolha uma das contas existentes listadas.", 400)
+    try:
+        org = _org_escolhida(orgs)
+    except contas.DadosInvalidos as e:
+        return bloquear(str(e), 400)
+    if _de_outra_conta(conflitos, uid) and request.form.get("confirmar_outra_pessoa") != "sim":
+        return bloquear("Já existe outra conta com este CPF ou e-mail. Confirme que é outra pessoa.", 409)
+    try:
+        aprovacao.atualizar_conta_existente(s, sid, uid=uid, org=org, ator=admin)
+    except aprovacao.JaReivindicada:
+        return bloquear("Esta solicitação não está pendente.", 409)
+    except ErroDiretorio as e:
+        return _ldap_fora(e)  # erro_ldap já registrado no histórico
+    enviado = _enviar_link(s, "conta_atualizada", uid, sol["email"], sol["nome"], s.agora(), org)
+    s.banco.atualizar(sid, link_enviado=int(enviado))
+    s.banco.auditar(admin, "link_enviado" if enviado else "falha_envio_link", f"sol:{sid}", sol["email"], s.agora())
+    flash(f"Conta {uid} atualizada." + (" Link enviado." if enviado else " Falha ao enviar o link: reenvie."))
     return redirect(url_for("admin.detalhe", sid=sid))
 
 

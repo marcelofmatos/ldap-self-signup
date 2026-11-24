@@ -2,6 +2,36 @@
 {% block largura %}largo{% endblock %}
 {% block abas %}{% include "admin/_nav.html" %}{% endblock %}
 {% block conteudo %}
+{% macro comparacao(conta, sol, alterados, cliente=none) %}
+<div class="tabela">
+<table class="lista">
+  <thead><tr><th>Campo</th><th>Atual (LDAP)</th><th>Novo</th></tr></thead>
+  <tbody>
+  {% for campo, rotulo, de, para in [("nome", "Nome", conta.cn, sol.nome), ("cpf", "CPF", conta.cpf|cpf, sol.cpf|cpf),
+                                     ("email", "E-mail", conta.mail, sol.email),
+                                     ("telefone", "Telefone", conta.telefone|telefone, sol.telefone|telefone)] %}
+  <tr><td>{{ rotulo }}</td><td>{{ de or '—' }}</td><td>{% if campo in alterados %}<strong>{{ para }}</strong>{% else %}{{ para }}{% endif %}</td></tr>
+  {% endfor %}
+  {% if cliente is not none %}
+  <tr><td>Cliente</td><td>{{ conta.ou or '—' }}</td><td class="cliente-escolhido">{{ cliente or '—' }}</td></tr>
+  {% endif %}
+  </tbody>
+</table>
+</div>
+{% endmacro %}
+{% macro seletor_cliente(orgs, escolhido, nova, sufixo="") %}
+  <label for="organizacao{{ sufixo }}">Cliente</label>
+  <select id="organizacao{{ sufixo }}" name="organizacao" required>
+    <option value="">— escolha —</option>
+    {% for o in orgs %}<option{% if o == escolhido %} selected{% endif %}>{{ o }}</option>{% endfor %}
+    <option value="__nova__"{% if nova %} selected{% endif %}>Novo cliente…</option>
+  </select>
+  <div class="cliente-novo">
+    <label for="organizacao_nova{{ sufixo }}">Nome do novo cliente (só se escolheu "Novo cliente")</label>
+    <input id="organizacao_nova{{ sufixo }}" name="organizacao_nova" value="{{ nova }}">
+    <label class="check"><input type="checkbox" name="confirmar_nova" value="sim"> Confirmo a criação do cliente novo</label>
+  </div>
+{% endmacro %}
 <h1>Solicitação <span class="id-badge">#{{ sol.id }}</span> <span class="pill st-{{ sol.status }}">{{ rotulos.get(sol.status, sol.status) }}</span></h1>
 {% if erro %}<p class="erro">{{ erro }}</p>{% endif %}
 <dl class="dados">
@@ -31,18 +61,7 @@
 {% if sol.origem == 'alteracao' and sol.status in ('pendente', 'aprovando') %}
 <h2>Alteração de dados</h2>
 {% if atual %}
-<div class="tabela">
-<table class="lista">
-  <thead><tr><th>Campo</th><th>Atual (LDAP)</th><th>Novo</th></tr></thead>
-  <tbody>
-  {% for campo, rotulo, de, para in [("nome", "Nome", atual.cn, sol.nome), ("cpf", "CPF", atual.cpf|cpf, sol.cpf|cpf),
-                                     ("email", "E-mail", atual.mail, sol.email),
-                                     ("telefone", "Telefone", atual.telefone|telefone, sol.telefone|telefone)] %}
-  <tr><td>{{ rotulo }}</td><td>{{ de or '—' }}</td><td>{% if campo in alterados %}<strong>{{ para }}</strong>{% else %}{{ para }}{% endif %}</td></tr>
-  {% endfor %}
-  </tbody>
-</table>
-</div>
+{{ comparacao(atual, sol, alterados) }}
 {% if 'email' in alterados %}<p>O link para definir a senha irá para o e-mail novo.</p>{% endif %}
 {% else %}<p class="erro">A conta {{ sol.uid_sugerido }} não existe mais no LDAP.</p>{% endif %}
 {% endif %}
@@ -64,17 +83,7 @@
   {% if sol.origem != 'alteracao' %}
   <label for="uid">Usuário (uid)</label>
   <input id="uid" name="uid" value="{{ sol.uid_sugerido }}" required>
-  <label for="organizacao">Cliente</label>
-  <select id="organizacao" name="organizacao" required>
-    <option value="">— escolha —</option>
-    {% for o in orgs %}<option{% if o == sol.organizacao %} selected{% endif %}>{{ o }}</option>{% endfor %}
-    <option value="__nova__"{% if org_nova %} selected{% endif %}>Novo cliente…</option>
-  </select>
-  <div class="cliente-novo">
-    <label for="organizacao_nova">Nome do novo cliente (só se escolheu "Novo cliente")</label>
-    <input id="organizacao_nova" name="organizacao_nova" value="{{ org_nova }}">
-    <label class="check"><input type="checkbox" name="confirmar_nova" value="sim"> Confirmo a criação do cliente novo</label>
-  </div>
+{{ seletor_cliente(orgs, sol.organizacao, org_nova) }}
   {% endif %}
   {% if conflitos.cpf or conflitos.mail %}
   <label class="check"><input type="checkbox" name="confirmar_outra_pessoa" value="sim"> Confirmo que é outra pessoa</label>
@@ -92,6 +101,45 @@
 </form>
 </section>
 </div>
+{% if existentes %}
+<section>
+<h2>Atualizar conta existente</h2>
+<p>Em vez de criar outra conta, grava os dados desta solicitação na conta que já existe e manda o link para
+definir a senha. Grupos e senha atual da conta não mudam.</p>
+<form method="post" action="{{ url_for('admin.atualizar_conta', sid=sol.id) }}" class="atualizar-conta">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  {% for e in existentes %}
+  {% if existentes|length == 1 %}
+  <input type="hidden" name="uid_conta" value="{{ e.conta.uid }}">
+  <h3>Conta {{ e.conta.uid }}</h3>
+  {% else %}
+  <label class="check"><input type="radio" name="uid_conta" value="{{ e.conta.uid }}" required> Conta <strong>{{ e.conta.uid }}</strong></label>
+  {% endif %}
+  {{ comparacao(e.conta, sol, e.alterados, cliente_existente) }}
+  {% endfor %}
+  {{ seletor_cliente(orgs, cliente_existente, org_nova_existente, "_existente") }}
+  {% if confirmar_existente %}
+  <label class="check"><input type="checkbox" name="confirmar_outra_pessoa" value="sim"> Confirmo que é outra pessoa
+    (exigido se o CPF ou o e-mail estiver numa conta diferente da escolhida)</label>
+  {% endif %}
+  <button type="submit">Atualizar conta existente e avisar</button>
+</form>
+<script>
+// A linha Cliente das tabelas acompanha o cliente escolhido no formulário.
+(function () {
+  var form = document.querySelector('form.atualizar-conta');
+  var cliente = form.querySelector('select[name=organizacao]');
+  var nova = form.querySelector('input[name=organizacao_nova]');
+  function mostrar() {
+    var valor = cliente.value === '__nova__' ? nova.value : cliente.value;
+    form.querySelectorAll('.cliente-escolhido').forEach(function (celula) { celula.textContent = valor || '—'; });
+  }
+  cliente.addEventListener('change', mostrar);
+  nova.addEventListener('input', mostrar);
+})();
+</script>
+</section>
+{% endif %}
 {% elif sol.status == 'aprovando' %}
 <h2>Em aprovação</h2>
 {% if sol.origem == 'alteracao' %}

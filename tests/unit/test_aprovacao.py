@@ -56,7 +56,8 @@ def test_atualizar_conta_existente_ok(amb):
                                             org="CLIENTE-B", ator="chefe")
     assert amb.dir.contas["joanalima"]["ou"] == "CLIENTE-B" and amb.dir.contas["joanalima"]["mail"] == "joana@exemplo.org"
     sol = amb.banco.obter(sid)
-    assert (sol["status"], sol["uid_final"], sol["decidido_por"]) == ("aprovada", "joanalima", "chefe")
+    assert (sol["status"], sol["uid_final"], sol["organizacao"], sol["decidido_por"]) == \
+           ("aprovada", "joanalima", "CLIENTE-B", "chefe")
     ultimo = auditoria(amb.banco)[0]
     assert ultimo["acao"] == "conta_atualizada" and ultimo["detalhe"] == "uid=joanalima org=CLIENTE-B"
 

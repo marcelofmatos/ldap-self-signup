@@ -72,5 +72,6 @@ def atualizar_conta_existente(s, sid: int, *, uid: str, org: str, ator: str) -> 
         s.banco.auditar(ator, "erro_ldap", f"sol:{sid}", f"conta existente uid={uid}: {e}", s.agora())
         raise
     agora = s.agora()
-    s.banco.atualizar(sid, status="aprovada", uid_final=uid, decidido_por=ator, decidido_em=iso(agora))
+    s.banco.atualizar(sid, status="aprovada", uid_final=uid, organizacao=org, decidido_por=ator,
+                      decidido_em=iso(agora))
     s.banco.auditar(ator, "conta_atualizada", f"sol:{sid}", f"uid={uid} org={org}", agora)
